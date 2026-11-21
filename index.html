@@ -2138,8 +2138,8 @@ function cloudPut(p){
     fetch(FS+syncKey+"?updateMask.fieldPaths=gm&updateMask.fieldPaths=updated",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(body),keepalive:true}).catch(()=>{});
   },600);
 }
-const TRACT={id:"horayot",file:"gemara-horayot.json"};
-const DONE=["סנהדרין","מכות","שבועות","עדיות","עבודה זרה"];
+const TRACT={id:"zevachim",file:"gemara-zevachim.json"};
+const DONE=["סנהדרין","מכות","שבועות","עדיות","עבודה זרה","הוריות"];
 const LS="gemara.pos";
 const app=document.getElementById("gmApp");
 let data=null, loading=null, pos={t:TRACT.id,a:0,s:-1,updated:""}, view=0, ref=null, writing=false, pending=false;
@@ -2186,9 +2186,9 @@ function render(scrollToNext){
   app.appendChild(hd);
   if(finished){
     const c=$e("div","gmsiyum");
-    c.appendChild($e("p","gmsiyumh","הדרן עלך מסכת הוריות, והדרך עלן!"));
-    c.appendChild($e("p",null,`סיימת את סדר נזיקין: ${DONE.join(", ")} והוריות. כתוב ל־Claude איזו מסכת להוסיף עכשיו.`));
-    const again=$e("button","gmbtn ghost","להתחיל את הוריות מחדש"); again.type="button"; again.onclick=()=>{ setPos(0,-1); view=0; render(); }; c.appendChild(again);
+    c.appendChild($e("p","gmsiyumh",`הדרן עלך מסכת ${data.title}, והדרך עלן!`));
+    c.appendChild($e("p",null,`סיימת את מסכת ${data.title}! כתוב ל־Claude איזו מסכת להוסיף עכשיו.`));
+    const again=$e("button","gmbtn ghost",`להתחיל את ${data.title} מחדש`); again.type="button"; again.onclick=()=>{ setPos(0,-1); view=0; render(); }; c.appendChild(again);
     app.appendChild(c);
   }
   // amud nav
@@ -2253,7 +2253,7 @@ window.gmOpen=function(){ if(!data){ load(); render(); } else { view=nextPoint()
 (function(){
   const P={zm:document.getElementById("zm"),chs:document.getElementById("chs"),gm:document.getElementById("gm")};
   const T={zm:document.getElementById("tabZm"),chs:document.getElementById("tabChs"),gm:document.getElementById("tabGm")};
-  const TITLE={zm:"זמני היום",chs:"לימוד חסידות יומי",gm:"גמרא – הוריות"};
+  const TITLE={zm:"זמני היום",chs:"לימוד חסידות יומי",gm:"גמרא – זבחים"};
   function show(which,save){
     if(!P[which]) which="zm";
     Object.keys(P).forEach(k=>{ P[k].hidden=(k!==which); T[k].setAttribute("aria-selected",String(k===which)); });
