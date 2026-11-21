@@ -1749,7 +1749,7 @@ if(tzSwitch){
     },()=>{ btn.textContent="לפי GPS"; if(!auto){ $("tzMsg").textContent="לא התקבלה הרשאת מיקום. אפשר לאשר אותה בהגדרות הדפדפן, או לבחור מקום מהרשימה."; $("tzBack").textContent="שינוי מקום"; $("tzBack").onclick=()=>$("changeLoc").click(); $("tzOk").onclick=()=>{$("tzBanner").hidden=true;}; $("tzBanner").hidden=false; } },{enableHighAccuracy:false,timeout:15000,maximumAge:600000});
   };
   btn.onclick=()=>locate(false);
-  if(store.get("zmanim.gps")!==false && !location.hash) locate(true);
+  if(store.get("zmanim.gps")!==false && !/^#g-?\d/.test(location.hash)) locate(true);
 })();
 
 window.addEventListener("hashchange",()=>{ const h=locFromHash(); if(h){ loc=h; store.set("zmanim.loc",h); day=todayIn(loc.tz); luachKey=""; render(); } });
@@ -2111,6 +2111,33 @@ load(); render();
 <script>
 (function(){
 "use strict";
+// ---- cloud sync between devices (standalone site only; Firestore REST) ----
+const CLOUD = /github\.io$/.test(location.hostname);
+const FS="https://firestore.googleapis.com/v1/projects/zmanim-sync/databases/(default)/documents/sync/";
+let syncKey=null;
+(function(){
+  let k=null; try{ k=localStorage.getItem("zm.sync"); }catch(e){}
+  const m=location.hash.match(/[#&]k=([A-Za-z0-9]{24,64})/);
+  if(m){ k=m[1]; const h=location.hash.replace(/[#&]k=[A-Za-z0-9]{24,64}/,"").replace(/^#&/,"#"); try{ history.replaceState(null,"",location.pathname+location.search+(h==="#"?"":h)); }catch(e){} }
+  if(!k && CLOUD){ const a=new Uint8Array(24); crypto.getRandomValues(a); k=Array.from(a,b=>"abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"[b%57]).join(""); }
+  if(k){ try{ localStorage.setItem("zm.sync",k); }catch(e){} }
+  syncKey=k; window.zmSyncKey=k;
+})();
+async function cloudGet(){
+  if(!CLOUD||!syncKey) return null;
+  try{ const r=await fetch(FS+syncKey,{cache:"no-store"}); if(!r.ok) return null; const j=await r.json();
+    const g=j.fields&&j.fields.gm&&j.fields.gm.mapValue&&j.fields.gm.mapValue.fields; if(!g) return null;
+    return {t:g.t&&g.t.stringValue, a:+(g.a&&g.a.integerValue), s:+(g.s&&g.s.integerValue), updated:(g.updated&&g.updated.stringValue)||""};
+  }catch(e){ return null; }
+}
+let cloudTimer=null;
+function cloudPut(p){
+  if(!CLOUD||!syncKey) return; clearTimeout(cloudTimer);
+  cloudTimer=setTimeout(()=>{
+    const body={fields:{updated:{stringValue:p.updated},gm:{mapValue:{fields:{t:{stringValue:p.t},a:{integerValue:String(p.a)},s:{integerValue:String(p.s)},updated:{stringValue:p.updated}}}}}};
+    fetch(FS+syncKey+"?updateMask.fieldPaths=gm&updateMask.fieldPaths=updated",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(body),keepalive:true}).catch(()=>{});
+  },600);
+}
 const TRACT={id:"horayot",file:"gemara-horayot.json"};
 const DONE=["סנהדרין","מכות","שבועות","עדיות","עבודה זרה"];
 const LS="gemara.pos";
@@ -2127,7 +2154,13 @@ async function saveRemote(){
   try{ await Promise.race([ref.set({t:pos.t,a:pos.a,s:pos.s,updated:pos.updated}), new Promise(r=>setTimeout(r,8000))]); }catch(e){}
   writing=false; if(pending){ pending=false; saveRemote(); }
 }
-function setPos(a,s){ pos={t:TRACT.id,a,s,updated:nowIso()}; saveLocal(); saveRemote(); }
+function setPos(a,s){ pos={t:TRACT.id,a,s,updated:nowIso()}; saveLocal(); saveRemote(); cloudPut(pos); }
+async function cloudPull(){
+  const d=await cloudGet();
+  if(d&&d.t===TRACT.id&&!isNaN(d.a)&&(d.updated||"")>(pos.updated||"")){ pos={t:d.t,a:d.a,s:isNaN(d.s)?-1:d.s,updated:d.updated}; saveLocal(); if(data){ view=nextPoint().a<data.amudim.length?nextPoint().a:view; render(); } }
+  else if(pos.updated&&(!d||(d.updated||"")<pos.updated)) cloudPut(pos);
+}
+if(CLOUD){ cloudPull(); document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") cloudPull(); }); }
 
 function load(){
   if(!loading) loading=fetch(TRACT.file).then(r=>r.ok?r.json():null).catch(()=>null).then(d=>{ data=d; if(d){ const n=nextPoint(); view=n.a<d.amudim.length?n.a:d.amudim.length-1; } render(true); return d; });
@@ -2235,7 +2268,7 @@ window.gmOpen=function(){ if(!data){ load(); render(); } else { view=nextPoint()
   const cb=document.getElementById("copyLink");
   function copied(url){ cb.classList.add("ok"); cb.textContent="✓ הועתק: "+url; setTimeout(()=>{ cb.classList.remove("ok"); cb.textContent="🔗 העתקת קישור לפתיחה במחשב"; },4000); }
   function fallback(url){ const t=document.createElement("textarea"); t.value=url; t.setAttribute("readonly",""); t.style.cssText="position:fixed;top:0;left:0;opacity:0"; document.body.appendChild(t); t.select(); t.setSelectionRange(0,url.length); let ok=false; try{ ok=document.execCommand("copy"); }catch(e){} t.remove(); if(ok) copied(url); else { cb.classList.add("ok"); cb.textContent=url; } }
-  if(cb) cb.onclick=()=>{ const url=SITE+(HASH[cur]||""); if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(url).then(()=>copied(url),()=>fallback(url)); } else fallback(url); };
+  if(cb) cb.onclick=()=>{ const url=SITE+(HASH[cur]||"#zmanim")+(window.zmSyncKey?"&k="+window.zmSyncKey:""); if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(url).then(()=>copied(url),()=>fallback(url)); } else fallback(url); };
   Object.keys(T).forEach(k=>{ T[k].onclick=()=>show(k,true); });
   let start="zm"; try{ start=localStorage.getItem("app.tab")||"zm"; }catch(e){}
   if(location.hash==="#limud") start="chs"; if(location.hash==="#zmanim") start="zm"; if(location.hash==="#gemara") start="gm";
