@@ -153,6 +153,8 @@ details summary{cursor:pointer;font-weight:600;color:var(--sky)}
 .apptabs{display:flex;gap:6px;max-width:520px;margin:0 auto 14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px}
 .apptabs button{flex:1;border:0;background:none;border-radius:10px;padding:9px 8px;font-weight:700;color:var(--muted)}
 .apptabs button[aria-selected="true"]{background:var(--sky);color:var(--bg)}
+.copylink{display:block;margin:-8px auto 12px;border:0;background:none;color:var(--muted);font-size:.8rem;padding:4px 10px;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.copylink.ok{color:var(--sky);text-decoration:none}
 #chs[hidden],#zm[hidden],#gm[hidden]{display:none}
 /* gemara */
 #gm{max-width:640px;margin:0 auto}
@@ -241,6 +243,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--sky)}
 </style>
 
 <nav class="apptabs" dir="rtl" role="tablist"><button type="button" role="tab" id="tabZm" aria-selected="true">זמנים ולוח</button><button type="button" role="tab" id="tabChs" aria-selected="false">לימוד חסידות</button><button type="button" role="tab" id="tabGm" aria-selected="false">גמרא</button></nav>
+<button type="button" class="copylink" id="copyLink" dir="rtl">🔗 העתקת קישור לפתיחה במחשב</button>
 <div class="wrap" dir="rtl" id="zm">
   <header>
     <div class="place">
@@ -2222,10 +2225,17 @@ window.gmOpen=function(){ if(!data){ load(); render(); } else { view=nextPoint()
     if(!P[which]) which="zm";
     Object.keys(P).forEach(k=>{ P[k].hidden=(k!==which); T[k].setAttribute("aria-selected",String(k===which)); });
     document.title=TITLE[which];
+    cur=which;
     if(save){ try{localStorage.setItem("app.tab",which);}catch(e){} }
     window.scrollTo({top:0});
     if(which==="gm"&&window.gmOpen) window.gmOpen();
   }
+  let cur="zm"; const HASH={zm:"#zmanim",chs:"#limud",gm:"#gemara"};
+  const SITE="https://bekermanavraham-lab.github.io/zmanim/";
+  const cb=document.getElementById("copyLink");
+  function copied(url){ cb.classList.add("ok"); cb.textContent="✓ הועתק: "+url; setTimeout(()=>{ cb.classList.remove("ok"); cb.textContent="🔗 העתקת קישור לפתיחה במחשב"; },4000); }
+  function fallback(url){ const t=document.createElement("textarea"); t.value=url; t.setAttribute("readonly",""); t.style.cssText="position:fixed;top:0;left:0;opacity:0"; document.body.appendChild(t); t.select(); t.setSelectionRange(0,url.length); let ok=false; try{ ok=document.execCommand("copy"); }catch(e){} t.remove(); if(ok) copied(url); else { cb.classList.add("ok"); cb.textContent=url; } }
+  if(cb) cb.onclick=()=>{ const url=SITE+(HASH[cur]||""); if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(url).then(()=>copied(url),()=>fallback(url)); } else fallback(url); };
   Object.keys(T).forEach(k=>{ T[k].onclick=()=>show(k,true); });
   let start="zm"; try{ start=localStorage.getItem("app.tab")||"zm"; }catch(e){}
   if(location.hash==="#limud") start="chs"; if(location.hash==="#zmanim") start="zm"; if(location.hash==="#gemara") start="gm";
