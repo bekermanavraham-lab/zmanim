@@ -2127,10 +2127,11 @@ let syncKey=null;
 })();
 async function cloudGet(){
   if(!CLOUD||!syncKey) return null;
-  try{ const r=await fetch(FS+syncKey,{cache:"no-store"}); if(!r.ok) return null; const j=await r.json();
+  // returns: object = remote position; null = no remote position yet (404); undefined = could not read (network etc.)
+  try{ const r=await fetch(FS+syncKey+"?_="+Date.now(),{cache:"no-store"}); if(r.status===404) return null; if(!r.ok) return undefined; const j=await r.json();
     const g=j.fields&&j.fields.gm&&j.fields.gm.mapValue&&j.fields.gm.mapValue.fields; if(!g) return null;
     return {t:g.t&&g.t.stringValue, a:+(g.a&&g.a.integerValue), s:+(g.s&&g.s.integerValue), updated:(g.updated&&g.updated.stringValue)||""};
-  }catch(e){ return null; }
+  }catch(e){ return undefined; }
 }
 let cloudTimer=null;
 function cloudPut(p){
@@ -2157,12 +2158,24 @@ async function saveRemote(){
   writing=false; if(pending){ pending=false; saveRemote(); }
 }
 function setPos(a,s){ pos={t:TRACT.id,a,s,updated:nowIso()}; saveLocal(); saveRemote(); cloudPut(pos); }
-async function cloudPull(){
-  const d=await cloudGet();
-  if(d&&d.t===TRACT.id&&!isNaN(d.a)&&(d.updated||"")>(pos.updated||"")){ pos={t:d.t,a:d.a,s:isNaN(d.s)?-1:d.s,updated:d.updated}; saveLocal(); if(data){ view=nextPoint().a<data.amudim.length?nextPoint().a:view; render(); } }
-  else if(pos.updated&&(!d||(d.updated||"")<pos.updated)) cloudPut(pos);
+let pulling=false, pullRetry=null;
+async function cloudPull(tries){
+  if(!CLOUD||!syncKey||pulling) return; pulling=true; clearTimeout(pullRetry);
+  const d=await cloudGet(); pulling=false;
+  if(d===undefined){ // could not read: never overwrite the cloud with an old position; try again shortly
+    const n=(tries||0)+1; if(n<=6) pullRetry=setTimeout(()=>cloudPull(n),n*2000); return; }
+  const remoteNewer = d && d.t===TRACT.id && !isNaN(d.a) && (d.updated||"")>(pos.updated||"");
+  if(remoteNewer){ pos={t:d.t,a:d.a,s:isNaN(d.s)?-1:d.s,updated:d.updated}; saveLocal(); if(data){ view=nextPoint().a<data.amudim.length?nextPoint().a:view; render(); } }
+  else if(pos.updated && pos.t===TRACT.id && (!d || d.t!==TRACT.id || (d.updated||"")<pos.updated)) cloudPut(pos);
 }
-if(CLOUD){ cloudPull(); document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") cloudPull(); }); }
+if(CLOUD){
+  cloudPull();
+  document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") cloudPull(); });
+  window.addEventListener("pageshow",()=>cloudPull());
+  window.addEventListener("focus",()=>cloudPull());
+  window.addEventListener("online",()=>cloudPull());
+  setInterval(()=>{ if(document.visibilityState==="visible") cloudPull(); },60000);
+}
 
 function load(){
   if(!loading) loading=fetch(TRACT.file).then(r=>r.ok?r.json():null).catch(()=>null).then(d=>{ data=d; if(d){ const n=nextPoint(); view=n.a<d.amudim.length?n.a:d.amudim.length-1; } render(true); return d; });
