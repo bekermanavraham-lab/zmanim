@@ -151,6 +151,8 @@ details summary{cursor:pointer;font-weight:600;color:var(--sky)}
 
 /* app tabs */
 .apptabs{display:flex;gap:6px;max-width:520px;margin:0 auto 14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px}
+.apptabs{position:sticky;top:max(6px,env(safe-area-inset-top,0px));z-index:60;box-shadow:0 4px 14px rgba(0,0,0,.08)}
+.apptabs button{white-space:nowrap;padding:8px 4px;font-size:.95rem}
 .apptabs button{flex:1;border:0;background:none;border-radius:10px;padding:9px 8px;font-weight:700;color:var(--muted)}
 .apptabs button[aria-selected="true"]{background:var(--sky);color:var(--bg)}
 .copylink{display:block;margin:-8px auto 12px;border:0;background:none;color:var(--muted);font-size:.8rem;padding:4px 10px;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
