@@ -1,0 +1,2238 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="זמני היום">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.json">
+<script>window.ZM_NO_TEXTS=true;</script>
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+</head>
+<body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>זמני היום</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: one narrow column — place & date header, day-arc strip, next-zman card, zmanim list, Shabbat card */
+:root{
+  --bg:#eef2f8; --surface:#ffffff; --ink:#15233d; --muted:#5d6c86; --line:#d9e0ec;
+  --sky:#284a80; --gold:#a8781f; --gold-soft:#f5ead2; --past:#9aa6ba;
+  --night:#1b2a4a; --dawn:#e9b65c; --ok:#2f7a4f;
+  --display:"Frank Ruhl Libre", "David", "Noto Serif Hebrew", "Times New Roman", serif;
+  --body:system-ui, -apple-system, "Segoe UI", Roboto, "Arial Hebrew", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0b1322; --surface:#131e33; --ink:#e7ecf5; --muted:#91a0b9; --line:#24324d;
+  --sky:#8db0ea; --gold:#e3b75e; --gold-soft:#2c2617; --past:#5c6a83;
+  --night:#060c18; --dawn:#d9a548; --ok:#2f8a57; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0b1322; --surface:#131e33; --ink:#e7ecf5; --muted:#91a0b9; --line:#24324d;
+  --sky:#8db0ea; --gold:#e3b75e; --gold-soft:#2c2617; --past:#5c6a83;
+  --night:#060c18; --dawn:#d9a548; --ok:#2f8a57; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}
+
+header{display:flex;flex-direction:column;gap:6px}
+.place{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.place h1{font-family:var(--display);font-size:2rem;line-height:1.1;margin:0;font-weight:700;text-wrap:balance}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 14px;font-size:.9rem;font-weight:600;color:var(--sky);white-space:nowrap}
+.dates{color:var(--muted);font-size:1rem}
+.dates b{color:var(--ink);font-family:var(--display);font-weight:500;font-size:1.15rem}
+.daynav{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.locbtns{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.tzbanner{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;justify-content:space-between;background:var(--gold-soft);border:1px solid color-mix(in srgb,var(--gold) 35%,transparent);border-radius:12px;padding:8px 14px;font-size:.92rem}
+.tzbanner[hidden]{display:none}
+.tzact{display:flex;gap:12px}
+.linkbtn{background:none;border:0;padding:0;color:var(--sky);font-weight:700;text-decoration:underline}
+.daynav button{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:6px 12px}
+.daynav input{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:5px 8px;min-width:0}
+
+.arc{position:relative;height:30px;border-radius:8px;overflow:hidden;
+  background:linear-gradient(to left,var(--night) 0%,var(--dawn) 10%,#9cc3ea 22%,#9cc3ea 78%,var(--dawn) 90%,var(--night) 100%)}
+.arc .now{position:absolute;top:0;bottom:0;width:3px;background:var(--ink);box-shadow:0 0 0 2px var(--surface)}
+.arc-labels{display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted);margin-top:4px}
+
+.next{background:var(--gold-soft);border:1px solid color-mix(in srgb,var(--gold) 35%,transparent);border-radius:16px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.next .lbl{font-size:.8rem;letter-spacing:.04em;color:var(--gold);font-weight:700}
+.next .name{font-family:var(--display);font-size:1.4rem;font-weight:700}
+.next .time{font-size:1.9rem;font-weight:700;font-family:var(--display)}
+.next .left{font-size:.9rem;color:var(--muted);text-align:end}
+
+.list{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.row{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:11px 18px;border-top:1px solid var(--line);align-items:baseline}
+.row:first-child{border-top:0}
+.row .n{font-weight:600}
+.row .t{font-size:1.2rem;font-weight:700}
+.row .d{grid-column:1/-1;font-size:.82rem;color:var(--muted)}
+.row.past .n,.row.past .t{color:var(--past)}
+.row.cur{background:color-mix(in srgb,var(--gold) 10%,transparent);box-shadow:inset -4px 0 0 var(--gold)}
+.row.shab .n{color:var(--gold)}
+.section-h{font-family:var(--display);font-size:1.25rem;margin:4px 0 0}
+
+.shabbat{background:var(--sky);color:#fff;border-radius:16px;padding:16px 18px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+:root[data-theme="dark"] .shabbat{color:#0b1322}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .shabbat{color:#0b1322}}
+.shabbat h2{grid-column:1/-1;margin:0;font-family:var(--display);font-size:1.2rem}
+.shabbat .k{font-size:.85rem;opacity:.85}
+.shabbat .v{font-family:var(--display);font-size:1.7rem;font-weight:700}
+
+.note{font-size:.82rem;color:var(--muted)}
+.luach{display:flex;flex-direction:column;gap:12px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip-ev{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:6px 12px;font-weight:600;font-size:.95rem}
+.chip-ev.hol{border-color:color-mix(in srgb,var(--gold) 45%,transparent);background:var(--gold-soft)}
+.chip-ev.fast{border-color:color-mix(in srgb,var(--sky) 40%,transparent);color:var(--sky)}
+.chip-ev.parsha{background:var(--sky);color:var(--bg);border-color:var(--sky)}
+.chip-ev.soft{font-weight:400;color:var(--muted)}
+.lgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.lcard{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 18px;min-width:0}
+.lcard h3,.minhag h3{margin:0 0 8px;font-family:var(--display);font-size:1.1rem}
+.lcard dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 12px}
+.lcard dt{color:var(--muted);font-size:.88rem;white-space:nowrap}
+.lcard dd{margin:0;font-weight:600;min-width:0}
+.minhag{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 18px}
+.minhag p{margin:0}
+.minhag .src{margin-top:8px;font-size:.82rem;color:var(--muted)}
+.ccbox{display:flex;flex-direction:column;gap:10px}
+.hybox{display:flex;flex-direction:column;gap:10px}
+.hylink{display:block;text-align:center;font-family:var(--display);font-weight:700;font-size:1.1rem;color:var(--bg);background:var(--sky);border-radius:12px;padding:12px 14px;text-decoration:none}
+.hylink:hover{filter:brightness(1.08)}
+.hycard .src{text-align:start}
+.hyshiur{font-size:.88rem;color:var(--muted)}
+.hyhr{border:0;border-top:1px solid var(--line);margin:4px 0;width:100%}
+.hysrc{color:var(--sky)}
+.cchead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.seg{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:3px;gap:2px}
+.seg button{border:0;background:none;border-radius:9px;padding:6px 14px;font-weight:600;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--sky);color:var(--bg)}
+.ccnav{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center}
+.ccnav .navb{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:6px 10px;font-size:.9rem;white-space:nowrap}
+.cclabel{text-align:center;font-weight:700;min-width:0}
+.ccmid{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
+.todayb{border:1px solid color-mix(in srgb,var(--gold) 45%,transparent);background:var(--gold-soft);color:var(--ink);border-radius:999px;padding:3px 12px;font-size:.82rem;font-weight:600}
+.todayb:disabled{opacity:.45;cursor:default}
+.ccdate{align-self:flex-start;background:var(--gold-soft);border:0;border-radius:8px;padding:3px 10px;font-size:.85rem;font-weight:700;color:var(--ink)}
+.minhag.cc{display:flex;flex-direction:column;gap:6px;line-height:1.7}
+.minhag.cc .cch{font-family:var(--display);font-weight:700;font-size:1.08rem;color:var(--gold)}
+#upcoming{display:flex;flex-direction:column;gap:8px}
+#upcoming[hidden]{display:none}
+.uprow{display:grid;grid-template-columns:8.5em 1fr;gap:12px;width:100%;text-align:start;background:none;border:0;border-top:1px solid var(--line);padding:11px 18px;align-items:baseline}
+.uprow:first-child{border-top:0}
+.uprow:hover{background:color-mix(in srgb,var(--gold) 8%,transparent)}
+.uprow .ud{color:var(--muted);font-size:.88rem}
+.uprow .ui{font-weight:600;min-width:0}
+.note a{color:var(--sky)}
+
+
+dialog{border:1px solid var(--line);border-radius:18px;background:var(--surface);color:var(--ink);padding:0;width:min(520px,calc(100vw - 32px));max-height:85vh}
+dialog::backdrop{background:rgb(5 10 20 / .55)}
+.dlg{display:flex;flex-direction:column;gap:12px;padding:18px}
+.dlg h2{margin:0;font-family:var(--display)}
+.dlg input,.dlg select{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:9px 12px}
+.cities{max-height:40vh;overflow:auto;border:1px solid var(--line);border-radius:12px}
+.cities button{display:flex;justify-content:space-between;width:100%;text-align:start;background:none;border:0;border-top:1px solid var(--line);padding:10px 14px}
+.cities button:first-child{border-top:0}
+.cities button small{color:var(--muted)}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:0;border-radius:10px;padding:9px 16px;font-weight:700;background:var(--sky);color:var(--bg)}
+.btn.ghost{background:none;border:1px solid var(--line);color:var(--ink)}
+.err{color:#c0392b;font-size:.9rem}
+details summary{cursor:pointer;font-weight:600;color:var(--sky)}
+
+/* app tabs */
+.apptabs{display:flex;gap:6px;max-width:520px;margin:0 auto 14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px}
+.apptabs button{flex:1;border:0;background:none;border-radius:10px;padding:9px 8px;font-weight:700;color:var(--muted)}
+.apptabs button[aria-selected="true"]{background:var(--sky);color:var(--bg)}
+#chs[hidden],#zm[hidden],#gm[hidden]{display:none}
+/* gemara */
+#gm{max-width:640px;margin:0 auto}
+.gmapp{display:flex;flex-direction:column;gap:12px}
+.gmhead{display:flex;flex-direction:column;gap:4px}
+.gmeyebrow{font-size:.8rem;letter-spacing:.04em;color:var(--gold);font-weight:700}
+.gmtitle{font-family:var(--display);font-size:2rem;margin:0;line-height:1.1}
+.gmbar{height:6px;background:var(--line);border-radius:6px;overflow:hidden;margin-top:6px}
+.gmbar>i{display:block;height:100%;background:var(--gold);border-radius:6px}
+.gmcount{font-size:.88rem;color:var(--muted)}
+.gmnav{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center}
+.gmnav .navb{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 10px;font-size:.9rem;white-space:nowrap}
+.gmnav .navb:disabled{opacity:.4}
+.gmsel{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 8px;font-weight:700;text-align:center;min-width:0}
+.gmback{display:flex;justify-content:center}
+.gmamud{font-family:var(--display);font-size:1.3rem;margin:6px 0 0;color:var(--sky)}
+.gmseg{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;scroll-margin-top:12px}
+.gmseg.done{opacity:.72}
+.gmseg.next{border-color:var(--gold);box-shadow:inset -4px 0 0 var(--gold)}
+.gmhere{font-size:.78rem;font-weight:700;color:var(--gold);letter-spacing:.03em}
+.gmexp{font-family:var(--display);font-size:1.12rem;line-height:1.85}
+.gmexp b{color:var(--ink);font-weight:700}
+.gmexp big{display:inline-block;font-size:.8rem;font-family:var(--body);font-weight:700;color:var(--gold);margin-left:6px}
+.gmtools{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.gmtool{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:4px 12px;font-size:.86rem;font-weight:600}
+.gmtool[aria-expanded="true"]{background:var(--sky);color:var(--bg);border-color:var(--sky)}
+.gmmark{margin-inline-start:auto;border:0;background:var(--gold-soft);color:var(--ink);border-radius:999px;padding:5px 12px;font-size:.86rem;font-weight:700}
+.gmseg.done .gmmark{background:none;color:var(--muted)}
+.gmpane{border-top:1px dashed var(--line);padding-top:10px;display:flex;flex-direction:column;gap:6px;font-size:.98rem;line-height:1.75}
+.gmpane p{margin:0}
+.gmpane.aram{font-family:var(--display);font-size:1.12rem}
+.gmpane.rashi,.gmpane.tos{font-size:.95rem}
+.gmend{display:flex;justify-content:center;padding:6px 0}
+.gmbtn{border:0;background:var(--sky);color:var(--bg);border-radius:12px;padding:11px 18px;font-weight:700}
+.gmbtn.ghost{background:none;border:1px solid var(--line);color:var(--ink)}
+.gmsiyum{background:var(--gold-soft);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.gmsiyumh{font-family:var(--display);font-size:1.3rem;font-weight:700;margin:0}
+.gmcredit{font-size:.78rem}
+#chs{font-size:17px;line-height:1.65;padding-bottom:120px}
+#chs .wrap{max-width:none;margin:0;padding:0;display:block}
+#chs header{padding:18px 0 8px}
+#chs .top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#chs .brand{font-family:var(--display);font-size:15px;color:var(--muted)}
+#chs .menu-btn{background:none;border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:6px 12px;font:inherit;font-size:14px;cursor:pointer}
+#chs h1{font-family:var(--display);font-weight:700;font-size:28px;margin:10px 0 2px;color:var(--sky);line-height:1.25}
+#chs .src{color:var(--muted);font-size:15px}
+#chs .bar{height:6px;background:var(--line);border-radius:6px;margin:14px 0 4px;overflow:hidden}
+#chs .bar>i{display:block;height:100%;background:var(--gold);border-radius:6px;transition:width .3s}
+#chs .count{font-size:13px;color:var(--muted)}
+#chs .tabs{display:flex;gap:8px;margin:16px 0 12px;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding:8px 0;z-index:5}
+#chs .tab{flex:1;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:10px 6px;font:inherit;font-size:16px;font-weight:500;cursor:pointer}
+#chs .tab.on{background:var(--sky);color:var(--bg);border-color:var(--sky)}
+#chs .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin:0 0 14px}
+#chs .card h2{font-size:16px;margin:0 0 8px;color:var(--gold);font-weight:700;display:flex;justify-content:space-between;gap:8px}
+#chs .card h2 small{color:var(--muted);font-weight:400}
+#chs .quote{font-family:var(--display);font-size:19px;line-height:1.85;border-right:3px solid var(--gold);padding-right:12px;margin:8px 0}
+#chs .note{font-size:15px;color:var(--muted);margin:6px 0 0}
+#chs .stage{margin:0 0 12px}
+#chs .stage b{color:var(--sky)}
+#chs .stage:last-child{margin-bottom:0}
+#chs ul{margin:4px 0;padding-right:20px}
+#chs li{margin:4px 0}
+#chs .sentence{background:var(--gold-soft);border-color:var(--gold)}
+#chs .sentence .big{font-family:var(--display);font-size:22px;font-weight:700;line-height:1.5;margin:4px 0 8px}
+#chs ol{margin:4px 0;padding-right:22px}
+#chs ol li{margin:8px 0}
+#chs .timer{display:flex;align-items:center;gap:10px;margin:0 0 14px}
+#chs .timer button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:6px 12px;font:inherit;font-size:14px;cursor:pointer}
+#chs .timer span{font-variant-numeric:tabular-nums;font-size:18px;font-weight:700;color:var(--sky)}
+#chs .foot{position:fixed;bottom:0;left:0;right:0;background:linear-gradient(transparent,var(--bg) 30%);padding:24px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));z-index:6}
+#chs .foot .wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:row}
+#chs .foot .wrap{display:flex;gap:8px;padding:0}
+#chs .done{flex:1;background:var(--ok);color:#fff;border:0;border-radius:14px;padding:14px;font:inherit;font-size:18px;font-weight:700;cursor:pointer}
+#chs .prev{background:var(--surface);border:1px solid var(--line);color:var(--ink);border-radius:14px;padding:14px 16px;font:inherit;cursor:pointer}
+#chs .prev:disabled{opacity:.4}
+#chs .sheet{position:fixed;inset:0;background:rgb(5 10 20 / .5);display:none;z-index:20}
+#chs .sheet.open{display:block}
+#chs .sheet .panel{position:absolute;bottom:0;left:0;right:0;max-height:80%;overflow:auto;background:var(--surface);border-radius:18px 18px 0 0;padding:18px}
+#chs .unit-row{display:flex;gap:10px;align-items:center;width:100%;text-align:right;background:none;border:0;border-bottom:1px solid var(--line);padding:12px 4px;font:inherit;color:var(--ink);cursor:pointer}
+#chs .unit-row .n{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;background:var(--line);flex:none}
+#chs .unit-row.fin .n{background:var(--ok);color:#fff}
+#chs .unit-row.cur .n{background:var(--gold);color:#fff}
+#chs .end{text-align:center;padding:40px 10px}
+#chs .end h1{font-size:30px}
+#chs .sync{font-size:12px;color:var(--muted);margin-top:6px}
+</style>
+
+<nav class="apptabs" dir="rtl" role="tablist"><button type="button" role="tab" id="tabZm" aria-selected="true">זמנים ולוח</button><button type="button" role="tab" id="tabChs" aria-selected="false">לימוד חסידות</button><button type="button" role="tab" id="tabGm" aria-selected="false">גמרא</button></nav>
+<div class="wrap" dir="rtl" id="zm">
+  <header>
+    <div class="place">
+      <h1 id="cityName">—</h1>
+      <div class="locbtns">
+        <button class="chip" id="gpsBtn" type="button" hidden>לפי GPS</button>
+        <button class="chip" id="changeLoc" type="button">שינוי מקום</button>
+      </div>
+    </div>
+    <div class="tzbanner" id="tzBanner" hidden><span id="tzMsg"></span><span class="tzact"><button type="button" class="linkbtn" id="tzBack"></button><button type="button" class="linkbtn" id="tzOk">אישור</button></span></div>
+    <div class="dates" id="dates"></div>
+    <div class="daynav">
+      <button type="button" id="prev" aria-label="יום קודם">‹ אתמול</button>
+      <button type="button" id="today">היום</button>
+      <button type="button" id="next" aria-label="יום הבא">מחר ›</button>
+      <input type="date" id="datePick" aria-label="בחירת תאריך">
+    </div>
+  </header>
+
+  <div>
+    <div class="arc" id="arc"><div class="now" id="nowMark" hidden></div></div>
+    <div class="arc-labels"><span>חצות הלילה</span><span>הנץ</span><span>חצות</span><span>שקיעה</span><span>חצות הלילה</span></div>
+  </div>
+
+  <div class="next" id="nextCard" hidden>
+    <div><div class="lbl">הזמן הבא</div><div class="name" id="nextName"></div></div>
+    <div><div class="time num" id="nextTime"></div><div class="left" id="nextLeft"></div></div>
+  </div>
+
+  <div class="list" id="list"></div>
+
+  <div class="shabbat" id="shabbat"></div>
+
+  <section class="luach" id="luach" aria-live="polite"></section>
+  <section id="upcoming" hidden></section>
+
+  <p class="note">החישוב לפי שיטת אתר Chabad.org (שיטת אדמו״ר הזקן): שעות זמניות מהנץ האמיתי עד השקיעה האמיתית, עלות 16.9°, משיכיר 10.2°, צאת הכוכבים 6°, מוצאי שבת 8.5°, הדלקת נרות 18 דקות לפני השקיעה (ירושלים 40). כמו באתר עצמו, מומלץ לא לסמוך על הדקה האחרונה ולהשאיר שתי דקות מרווח.</p>
+</div>
+
+<section id="chs" dir="rtl" hidden>
+<div class="wrap">
+  <header>
+    <div class="top">
+      <div class="brand">לימוד חסידות יומי · עבודת ה' בהתבוננות</div>
+      <button class="menu-btn" id="c_menuBtn">☰ כל היחידות</button>
+    </div>
+    <div id="c_head"></div>
+  </header>
+  <div class="tabs" id="c_tabs">
+    <button class="tab on" data-t="short">☀️ לפני התפילה</button>
+    <button class="tab" data-t="long">📖 לימוד היום</button>
+  </div>
+  <main id="c_main"></main>
+  <div class="sync" id="c_sync"></div>
+</div>
+<div class="foot"><div class="wrap">
+  <button class="prev" id="c_prevBtn">→ הקודמת</button>
+  <button class="done" id="c_doneBtn">✔ סיימתי</button>
+</div></div>
+<div class="sheet" id="c_sheet"><div class="panel">
+  <h2 style="margin:0 0 8px;font-family:'Frank Ruhl Libre',serif;color:var(--navy)">כל היחידות</h2>
+  <div id="c_list"></div>
+</div></div>
+</section>
+
+<dialog id="dlg">
+  <div class="dlg" dir="rtl">
+    <h2>בחירת מקום</h2>
+    <input id="search" type="search" placeholder="חיפוש עיר (עברית / English / Русский)" autocomplete="off">
+    <div class="cities" id="cities"></div>
+    <details id="customBox">
+      <summary>מקום אחר לפי קואורדינטות</summary>
+      <div class="dlg" style="padding:12px 0 0">
+        <label>שם המקום<input id="cName" placeholder="למשל: המלון בבודפשט"></label>
+        <label>קואורדינטות (אפשר להעתיק מגוגל מפות)<input id="cCoords" class="num" placeholder="47.4979, 19.0402" dir="ltr"></label>
+        <label>אזור זמן<input id="cTz" list="tzList" dir="ltr"></label>
+        <datalist id="tzList"></datalist>
+        <div class="err" id="cErr" hidden></div>
+        <div class="btnrow"><button class="btn" type="button" id="cSave">שמירה</button></div>
+      </div>
+    </details>
+    <div class="btnrow"><button class="btn ghost" type="button" id="close">סגירה</button></div>
+  </div>
+</dialog>
+
+<script>
+(function(){
+"use strict";
+// ---------- Cities ----------
+const J="Asia/Jerusalem", MSK="Europe/Moscow", NY="America/New_York";
+const CITIES=[
+ ["מוסקבה","Moscow Москва",55.7558,37.6173,MSK],
+ ["סנט פטרבורג","Saint Petersburg Санкт-Петербург",59.9343,30.3351,MSK],
+ ["קאזאן","Kazan Казань",55.7963,49.1088,MSK],
+ ["ניז׳ני נובגורוד","Nizhny Novgorod Нижний Новгород",56.2965,43.9361,MSK],
+ ["רוסטוב על הדון","Rostov-on-Don Ростов-на-Дону",47.2357,39.7015,MSK],
+ ["סוצ׳י","Sochi Сочи",43.6028,39.7342,MSK],
+ ["יקטרינבורג","Yekaterinburg Екатеринбург",56.8389,60.6057,"Asia/Yekaterinburg"],
+ ["נובוסיבירסק","Novosibirsk Новосибирск",55.0084,82.9357,"Asia/Novosibirsk"],
+ ["טשקנט","Tashkent Ташкент",41.2995,69.2401,"Asia/Tashkent"],
+ ["סמרקנד","Samarkand Самарканд",39.6270,66.9750,"Asia/Samarkand"],
+ ["בוכרה","Bukhara Бухара",39.7747,64.4286,"Asia/Samarkand"],
+ ["אלמאטי","Almaty Алматы",43.2389,76.8897,"Asia/Almaty"],
+ ["באקו","Baku Баку",40.4093,49.8671,"Asia/Baku"],
+ ["טביליסי","Tbilisi Тбилиси",41.7151,44.8271,"Asia/Tbilisi"],
+ ["קייב","Kyiv Kiev Киев",50.4501,30.5234,"Europe/Kiev"],
+ ["דניפרו","Dnipro Днепр",48.4647,35.0462,"Europe/Kiev"],
+ ["אודסה","Odesa Одесса",46.4825,30.7233,"Europe/Kiev"],
+ ["מינסק","Minsk Минск",53.9006,27.5590,"Europe/Minsk"],
+ ["ריגה","Riga Рига",56.9496,24.1052,"Europe/Riga"],
+ ["ירושלים","Jerusalem Иерусалим",31.7683,35.2137,J,40],
+ ["כפר חב״ד","Kfar Chabad Кфар Хабад",31.9886,34.8517,J],
+ ["תל אביב","Tel Aviv Тель-Авив",32.0853,34.7818,J],
+ ["בני ברק","Bnei Brak Бней-Брак",32.0807,34.8338,J],
+ ["נחלת הר חב״ד – קרית מלאכי","Kiryat Malachi Кирьят-Малахи",31.7310,34.7440,J],
+ ["צפת","Safed Tzfat Цфат",32.9646,35.4960,J],
+ ["חיפה","Haifa Хайфа",32.7940,34.9896,J],
+ ["נתניה","Netanya Нетания",32.3215,34.8532,J],
+ ["באר שבע","Beer Sheva Беэр-Шева",31.2518,34.7913,J],
+ ["קראון הייטס","Crown Heights Brooklyn 770 Нью-Йорк",40.6694,-73.9422,NY],
+ ["מנהטן","Manhattan New York",40.7831,-73.9712,NY],
+ ["מיאמי","Miami Майами",25.7617,-80.1918,NY],
+ ["שיקגו","Chicago Чикаго",41.8781,-87.6298,"America/Chicago"],
+ ["לוס אנג׳לס","Los Angeles Лос-Анджелес",34.0522,-118.2437,"America/Los_Angeles"],
+ ["טורונטו","Toronto Торонто",43.6532,-79.3832,"America/Toronto"],
+ ["מונטריאול","Montreal Монреаль",45.5017,-73.5673,"America/Toronto"],
+ ["לונדון","London Лондон",51.5074,-0.1278,"Europe/London"],
+ ["פריז","Paris Париж",48.8566,2.3522,"Europe/Paris"],
+ ["אנטוורפן","Antwerp Антверпен",51.2194,4.4025,"Europe/Brussels"],
+ ["ברלין","Berlin Берлин",52.5200,13.4050,"Europe/Berlin"],
+ ["וינה","Vienna Вена",48.2082,16.3738,"Europe/Vienna"],
+ ["פראג","Prague Прага",50.0755,14.4378,"Europe/Prague"],
+ ["מילאנו","Milan Милан",45.4642,9.1900,"Europe/Rome"],
+ ["רומא","Rome Рим",41.9028,12.4964,"Europe/Rome"],
+ ["איסטנבול","Istanbul Стамбул",41.0082,28.9784,"Europe/Istanbul"],
+ ["דובאי","Dubai Дубай",25.2048,55.2708,"Asia/Dubai"],
+ ["בנגקוק","Bangkok Бангкок",13.7563,100.5018,"Asia/Bangkok"],
+ ["יוהנסבורג","Johannesburg Йоханнесбург",-26.2041,28.0473,"Africa/Johannesburg"],
+ ["בואנוס איירס","Buenos Aires Буэнос-Айрес",-34.6037,-58.3816,"America/Argentina/Buenos_Aires"],
+ ["סאו פאולו","Sao Paulo Сан-Паулу",-23.5505,-46.6333,"America/Sao_Paulo"],
+ ["מלבורן","Melbourne Мельбурн",-37.8136,144.9631,"Australia/Melbourne"],
+ ["סידני","Sydney Сидней",-33.8688,151.2093,"Australia/Sydney"],
+ // אסיה והמזרח הרחוק
+ ["טוקיו","Tokyo Токио Japan",35.6762,139.6503,"Asia/Tokyo"],
+ ["אוסקה","Osaka Осака Japan",34.6937,135.5023,"Asia/Tokyo"],
+ ["קיוטו","Kyoto Киото Japan",35.0116,135.7681,"Asia/Tokyo"],
+ ["סיאול","Seoul Сеул Korea",37.5665,126.9780,"Asia/Seoul"],
+ ["בייג׳ינג","Beijing Пекин China",39.9042,116.4074,"Asia/Shanghai"],
+ ["שנגחאי","Shanghai Шанхай China",31.2304,121.4737,"Asia/Shanghai"],
+ ["גואנגג׳ואו","Guangzhou Гуанчжоу China",23.1291,113.2644,"Asia/Shanghai"],
+ ["שנז׳ן","Shenzhen Шэньчжэнь China",22.5431,114.0579,"Asia/Shanghai"],
+ ["הונג קונג","Hong Kong Гонконг",22.3193,114.1694,"Asia/Hong_Kong"],
+ ["טאיפיי","Taipei Тайбэй Taiwan",25.0330,121.5654,"Asia/Taipei"],
+ ["סינגפור","Singapore Сингапур",1.3521,103.8198,"Asia/Singapore"],
+ ["קואלה לומפור","Kuala Lumpur Куала-Лумпур Malaysia",3.1390,101.6869,"Asia/Kuala_Lumpur"],
+ ["הו צ׳י מין","Ho Chi Minh Saigon Хошимин Vietnam",10.8231,106.6297,"Asia/Ho_Chi_Minh"],
+ ["האנוי","Hanoi Ханой Vietnam",21.0278,105.8342,"Asia/Bangkok"],
+ ["פוקט","Phuket Пхукет Thailand",7.8804,98.3923,"Asia/Bangkok"],
+ ["צ׳יאנג מאי","Chiang Mai Чиангмай Thailand",18.7883,98.9853,"Asia/Bangkok"],
+ ["קוסמוי","Koh Samui Самуи Thailand",9.5120,100.0136,"Asia/Bangkok"],
+ ["באלי","Bali Бали Indonesia",-8.6500,115.2167,"Asia/Makassar"],
+ ["מנילה","Manila Манила Philippines",14.5995,120.9842,"Asia/Manila"],
+ ["מומבאי","Mumbai Bombay Мумбаи India",19.0760,72.8777,"Asia/Kolkata"],
+ ["ניו דלהי","New Delhi Нью-Дели India",28.6139,77.2090,"Asia/Kolkata"],
+ ["גואה","Goa Гоа India",15.4909,73.8278,"Asia/Kolkata"],
+ ["קטמנדו","Kathmandu Катманду Nepal",27.7172,85.3240,"Asia/Kathmandu"],
+ ["אבו דאבי","Abu Dhabi Абу-Даби",24.4539,54.3773,"Asia/Dubai"],
+ ["בחריין","Bahrain Manama Бахрейн",26.2285,50.5860,"Asia/Bahrain"],
+ ["בישקק","Bishkek Бишкек",42.8746,74.5698,"Asia/Bishkek"],
+ ["אסטנה","Astana Астана",51.1694,71.4491,"Asia/Almaty"],
+ ["דושנבה","Dushanbe Душанбе",38.5598,68.7870,"Asia/Dushanbe"],
+ ["ירוואן","Yerevan Ереван",40.1792,44.4991,"Asia/Yerevan"],
+ ["פרגנה","Fergana Фергана",40.3864,71.7864,"Asia/Tashkent"],
+ // רוסיה – עוד ערים
+ ["סמרה","Samara Самара",53.1959,50.1002,"Europe/Samara"],
+ ["וולגוגרד","Volgograd Волгоград",48.7080,44.5133,"Europe/Volgograd"],
+ ["קרסנודר","Krasnodar Краснодар",45.0355,38.9753,MSK],
+ ["וורונז׳","Voronezh Воронеж",51.6720,39.1843,MSK],
+ ["קלינינגרד","Kaliningrad Калининград",54.7104,20.4522,"Europe/Kaliningrad"],
+ ["פרם","Perm Пермь",58.0105,56.2502,"Asia/Yekaterinburg"],
+ ["צ׳ליאבינסק","Chelyabinsk Челябинск",55.1644,61.4368,"Asia/Yekaterinburg"],
+ ["אופה","Ufa Уфа",54.7388,55.9721,"Asia/Yekaterinburg"],
+ ["אומסק","Omsk Омск",54.9885,73.3242,"Asia/Omsk"],
+ ["קרסנויארסק","Krasnoyarsk Красноярск",56.0153,92.8932,"Asia/Krasnoyarsk"],
+ ["אירקוטסק","Irkutsk Иркутск",52.2870,104.3050,"Asia/Irkutsk"],
+ ["חברובסק","Khabarovsk Хабаровск",48.4802,135.0719,"Asia/Vladivostok"],
+ ["ולדיווסטוק","Vladivostok Владивосток",43.1155,131.8855,"Asia/Vladivostok"],
+ ["בירוביג׳ן","Birobidzhan Биробиджан",48.7946,132.9218,"Asia/Vladivostok"],
+ ["פיאטיגורסק","Pyatigorsk Пятигорск",44.0486,43.0594,MSK],
+ ["דרבנט","Derbent Дербент",42.0678,48.2899,MSK],
+ ["מחצ׳קלה","Makhachkala Махачкала",42.9849,47.5047,MSK],
+ ["נלצ׳יק","Nalchik Нальчик",43.4853,43.6071,MSK],
+ ["טולה","Tula Тула",54.1931,37.6173,MSK],
+ ["ירוסלבל","Yaroslavl Ярославль",57.6261,39.8845,MSK],
+ ["סרטוב","Saratov Саратов",51.5331,46.0342,"Europe/Saratov"],
+ ["סימפרופול","Simferopol Симферополь",44.9521,34.1024,"Europe/Simferopol"],
+ // אירופה – עוד
+ ["אמסטרדם","Amsterdam Амстердам",52.3676,4.9041,"Europe/Amsterdam"],
+ ["בריסל","Brussels Брюссель",50.8503,4.3517,"Europe/Brussels"],
+ ["ציריך","Zurich Цюрих",47.3769,8.5417,"Europe/Zurich"],
+ ["ז׳נבה","Geneva Женева",46.2044,6.1432,"Europe/Zurich"],
+ ["מנצ׳סטר","Manchester Манчестер",53.4808,-2.2426,"Europe/London"],
+ ["מדריד","Madrid Мадрид",40.4168,-3.7038,"Europe/Madrid"],
+ ["ברצלונה","Barcelona Барселона",41.3874,2.1686,"Europe/Madrid"],
+ ["ליסבון","Lisbon Лиссабон",38.7223,-9.1393,"Europe/Lisbon"],
+ ["ניס","Nice Ницца",43.7102,7.2620,"Europe/Paris"],
+ ["מרסיי","Marseille Марсель",43.2965,5.3698,"Europe/Paris"],
+ ["מינכן","Munich Мюнхен",48.1351,11.5820,"Europe/Berlin"],
+ ["פרנקפורט","Frankfurt Франкфурт",50.1109,8.6821,"Europe/Berlin"],
+ ["בודפשט","Budapest Будапешт",47.4979,19.0402,"Europe/Budapest"],
+ ["ורשה","Warsaw Варшава",52.2297,21.0122,"Europe/Warsaw"],
+ ["קרקוב","Krakow Краков",50.0647,19.9450,"Europe/Warsaw"],
+ ["בוקרשט","Bucharest Бухарест",44.4268,26.1025,"Europe/Bucharest"],
+ ["קישינב","Chisinau Кишинёв",47.0105,28.8638,"Europe/Chisinau"],
+ ["וילנה","Vilnius Вильнюс",54.6872,25.2797,"Europe/Vilnius"],
+ ["טאלין","Tallinn Таллин",59.4370,24.7536,"Europe/Tallinn"],
+ ["הלסינקי","Helsinki Хельсинки",60.1699,24.9384,"Europe/Helsinki"],
+ ["סטוקהולם","Stockholm Стокгольм",59.3293,18.0686,"Europe/Stockholm"],
+ ["קופנהגן","Copenhagen Копенгаген",55.6761,12.5683,"Europe/Copenhagen"],
+ ["אוסלו","Oslo Осло",59.9139,10.7522,"Europe/Oslo"],
+ ["אתונה","Athens Афины",37.9838,23.7275,"Europe/Athens"],
+ ["סלוניקי","Thessaloniki Салоники",40.6401,22.9444,"Europe/Athens"],
+ ["לרנקה","Larnaca Ларнака Cyprus",34.9229,33.6233,"Asia/Nicosia"],
+ ["לימסול","Limassol Лимасол Cyprus",34.7071,33.0226,"Asia/Nicosia"],
+ ["בלגרד","Belgrade Белград",44.7866,20.4489,"Europe/Belgrade"],
+ ["סופיה","Sofia София",42.6977,23.3219,"Europe/Sofia"],
+ ["אנטליה","Antalya Анталья",36.8969,30.7133,"Europe/Istanbul"],
+ ["אומן","Uman Умань",48.7484,30.2218,"Europe/Kiev"],
+ ["חרקוב","Kharkiv Харьков",49.9935,36.2304,"Europe/Kiev"],
+ ["ברדיצ׳וב","Berdychiv Бердичев",49.8996,28.6027,"Europe/Kiev"],
+ ["ליובאוויטש (רוסיה)","Lubavitch Lyubavichi Любавичи לובאויטש ליובאויטש",54.8670,31.2570,MSK],
+ // ארץ ישראל – עוד
+ ["אילת","Eilat Эйлат",29.5577,34.9519,J],
+ ["אשדוד","Ashdod Ашдод",31.8044,34.6553,J],
+ ["ראשון לציון","Rishon LeZion Ришон-ле-Цион",31.9730,34.7925,J],
+ ["פתח תקווה","Petah Tikva Петах-Тиква",32.0840,34.8878,J],
+ ["חברון","Hebron Хеврон",31.5326,35.0998,J],
+ ["טבריה","Tiberias Тверия",32.7959,35.5310,J],
+ ["נצרת עילית","Nof HaGalil Нацрат-Илит",32.7083,35.3242,J],
+ ["ביתר עילית","Beitar Illit Бейтар-Илит",31.6960,35.1110,J,40],
+ ["מודיעין","Modiin Модиин",31.8980,35.0100,J],
+ // אמריקה – עוד
+ ["וושינגטון","Washington DC Вашингтон",38.9072,-77.0369,NY],
+ ["פילדלפיה","Philadelphia Филадельфия",39.9526,-75.1652,NY],
+ ["בוסטון","Boston Бостон",42.3601,-71.0589,NY],
+ ["לייקווד","Lakewood NJ Лейквуд",40.0821,-74.2097,NY],
+ ["מוריסטאון","Morristown NJ Морристаун",40.7968,-74.4815,NY],
+ ["פיטסבורג","Pittsburgh Питтсбург",40.4406,-79.9959,NY],
+ ["דטרויט","Detroit Детройт",42.3314,-83.0458,"America/Detroit"],
+ ["אטלנטה","Atlanta Атланта",33.7490,-84.3880,NY],
+ ["יוסטון","Houston Хьюстон",29.7604,-95.3698,"America/Chicago"],
+ ["דאלאס","Dallas Даллас",32.7767,-96.7970,"America/Chicago"],
+ ["דנוור","Denver Денвер",39.7392,-104.9903,"America/Denver"],
+ ["פיניקס","Phoenix Финикс",33.4484,-112.0740,"America/Phoenix"],
+ ["לאס וגאס","Las Vegas Лас-Вегас",36.1699,-115.1398,"America/Los_Angeles"],
+ ["סן פרנסיסקו","San Francisco Сан-Франциско",37.7749,-122.4194,"America/Los_Angeles"],
+ ["סיאטל","Seattle Сиэтл",47.6062,-122.3321,"America/Los_Angeles"],
+ ["ונקובר","Vancouver Ванкувер",49.2827,-123.1207,"America/Vancouver"],
+ ["מקסיקו סיטי","Mexico City Мехико",19.4326,-99.1332,"America/Mexico_City"],
+ ["קנקון","Cancun Канкун",21.1619,-86.8515,"America/Cancun"],
+ ["פנמה","Panama Панама",8.9824,-79.5199,"America/Panama"],
+ ["בוגוטה","Bogota Богота",4.7110,-74.0721,"America/Bogota"],
+ ["סנטיאגו","Santiago Chile Сантьяго",-33.4489,-70.6693,"America/Santiago"],
+ ["ריו דה ז׳נרו","Rio de Janeiro Рио-де-Жанейро",-22.9068,-43.1729,"America/Sao_Paulo"],
+ ["מונטווידאו","Montevideo Монтевидео",-34.9011,-56.1645,"America/Montevideo"],
+ // אפריקה ואוקיאניה
+ ["קייפטאון","Cape Town Кейптаун",-33.9249,18.4241,"Africa/Johannesburg"],
+ ["קהיר","Cairo Каир",30.0444,31.2357,"Africa/Cairo"],
+ ["מרקש","Marrakesh Марракеш",31.6295,-7.9811,"Africa/Casablanca"],
+ ["קזבלנקה","Casablanca Касабланка",33.5731,-7.5898,"Africa/Casablanca"],
+ ["ניירובי","Nairobi Найроби",-1.2921,36.8219,"Africa/Nairobi"],
+ ["זנזיבר","Zanzibar Занзибар",-6.1659,39.2026,"Africa/Dar_es_Salaam"],
+ ["מאוריציוס","Mauritius Маврикий",-20.1609,57.5012,"Indian/Mauritius"],
+ ["סיישל","Seychelles Сейшелы",-4.6796,55.4920,"Indian/Mahe"],
+ ["מלדיביים","Maldives Male Мальдивы",4.1755,73.5093,"Indian/Maldives"],
+ ["סרי לנקה","Sri Lanka Colombo Шри-Ланка",6.9271,79.8612,"Asia/Colombo"],
+ ["פרת׳","Perth Перт",-31.9505,115.8605,"Australia/Perth"],
+ ["בריסביין","Brisbane Брисбен",-27.4698,153.0251,"Australia/Brisbane"],
+ ["אוקלנד","Auckland Окленд New Zealand",-36.8485,174.7633,"Pacific/Auckland"],
+ // ---- תוספת: ערים מכל העולם ----
+ ["ברמינגהאם (אלבמה)", "Birmingham Alabama Бирмингем", 33.5186, -86.8104, "America/Chicago"],
+ ["אנקורג׳ (אלסקה)", "Anchorage Alaska Анкоридж", 61.2181, -149.9003, "America/Anchorage"],
+ ["ליטל רוק (ארקנסו)", "Little Rock Arkansas Литл-Рок", 34.7465, -92.2896, "America/Chicago"],
+ ["סן דייגו (קליפורניה)", "San Diego California Сан-Диего", 32.7157, -117.1611, "America/Los_Angeles"],
+ ["הרטפורד (קונטיקט)", "Hartford Connecticut Хартфорд", 41.7658, -72.6734, "America/New_York"],
+ ["ניו הייבן (קונטיקט)", "New Haven Connecticut Нью-Хейвен", 41.3083, -72.9279, "America/New_York"],
+ ["וילמינגטון (דלאוור)", "Wilmington Delaware Уилмингтон", 39.7391, -75.5398, "America/New_York"],
+ ["בוקה רטון (פלורידה)", "Boca Raton Florida Бока-Ратон", 26.3683, -80.1289, "America/New_York"],
+ ["אורלנדו (פלורידה)", "Orlando Florida Орландо", 28.5383, -81.3792, "America/New_York"],
+ ["הונולולו (הוואי)", "Honolulu Hawaii Гонолулу", 21.3069, -157.8583, "Pacific/Honolulu"],
+ ["בויסי (איידהו)", "Boise Idaho Бойсе", 43.615, -116.2023, "America/Boise"],
+ ["אינדיאנפוליס (אינדיאנה)", "Indianapolis Indiana Индианаполис", 39.7684, -86.1581, "America/Indiana/Indianapolis"],
+ ["דה מוין (איווה)", "Des Moines Iowa Де-Мойн", 41.5868, -93.625, "America/Chicago"],
+ ["קנזס סיטי", "Kansas City Kansas Missouri Канзас-Сити", 39.0997, -94.5786, "America/Chicago"],
+ ["לואיוויל (קנטקי)", "Louisville Kentucky Луисвилл", 38.2527, -85.7585, "America/Kentucky/Louisville"],
+ ["ניו אורלינס (לואיזיאנה)", "New Orleans Louisiana Новый Орлеан", 29.9511, -90.0715, "America/Chicago"],
+ ["פורטלנד (מיין)", "Portland Maine Портленд Мэн", 43.6591, -70.2568, "America/New_York"],
+ ["בולטימור (מרילנד)", "Baltimore Maryland Балтимор", 39.2904, -76.6122, "America/New_York"],
+ ["מיניאפוליס (מינסוטה)", "Minneapolis Minnesota Миннеаполис", 44.9778, -93.265, "America/Chicago"],
+ ["ג׳קסון (מיסיסיפי)", "Jackson Mississippi Джэксон", 32.2988, -90.1848, "America/Chicago"],
+ ["סנט לואיס (מיזורי)", "St. Louis Missouri Saint Louis Сент-Луис", 38.627, -90.1994, "America/Chicago"],
+ ["בילינגס (מונטנה)", "Billings Montana Биллингс", 45.7833, -108.5007, "America/Denver"],
+ ["אומהה (נברסקה)", "Omaha Nebraska Омаха", 41.2565, -95.9345, "America/Chicago"],
+ ["מנצ׳סטר (ניו המפשייר)", "Manchester New Hampshire Манчестер Нью-Гэмпшир", 42.9956, -71.4548, "America/New_York"],
+ ["אלבקרקי (ניו מקסיקו)", "Albuquerque New Mexico Альбукерке", 35.0844, -106.6504, "America/Denver"],
+ ["מונסי (ניו יורק)", "Monsey New York Монси", 41.1112, -74.0685, "America/New_York"],
+ ["אלבני (ניו יורק)", "Albany New York Олбани", 42.6526, -73.7562, "America/New_York"],
+ ["בפאלו (ניו יורק)", "Buffalo New York Буффало", 42.8864, -78.8784, "America/New_York"],
+ ["שארלוט (צפון קרוליינה)", "Charlotte North Carolina Шарлотт", 35.2271, -80.8431, "America/New_York"],
+ ["פארגו (צפון דקוטה)", "Fargo North Dakota Фарго", 46.8772, -96.7898, "America/Chicago"],
+ ["קליבלנד (אוהיו)", "Cleveland Ohio Кливленд", 41.4993, -81.6944, "America/New_York"],
+ ["סינסינטי (אוהיו)", "Cincinnati Ohio Цинциннати", 39.1031, -84.512, "America/New_York"],
+ ["אוקלהומה סיטי", "Oklahoma City Оклахома-Сити", 35.4676, -97.5164, "America/Chicago"],
+ ["פורטלנד (אורגון)", "Portland Oregon Портленд Орегон", 45.5152, -122.6784, "America/Los_Angeles"],
+ ["פרובידנס (רוד איילנד)", "Providence Rhode Island Провиденс", 41.824, -71.4128, "America/New_York"],
+ ["צ׳רלסטון (דרום קרוליינה)", "Charleston South Carolina Чарльстон", 32.7765, -79.9311, "America/New_York"],
+ ["סו פולס (דרום דקוטה)", "Sioux Falls South Dakota Су-Фолс", 43.5446, -96.7311, "America/Chicago"],
+ ["נאשוויל (טנסי)", "Nashville Tennessee Нашвилл", 36.1627, -86.7816, "America/Chicago"],
+ ["ממפיס (טנסי)", "Memphis Tennessee Мемфис", 35.1495, -90.049, "America/Chicago"],
+ ["אוסטין (טקסס)", "Austin Texas Остин", 30.2672, -97.7431, "America/Chicago"],
+ ["סולט לייק סיטי (יוטה)", "Salt Lake City Utah Солт-Лейк-Сити", 40.7608, -111.891, "America/Denver"],
+ ["ברלינגטון (ורמונט)", "Burlington Vermont Берлингтон", 44.4759, -73.2121, "America/New_York"],
+ ["ריצ׳מונד (וירג׳יניה)", "Richmond Virginia Ричмонд", 37.5407, -77.436, "America/New_York"],
+ ["צ׳רלסטון (מערב וירג׳יניה)", "Charleston West Virginia Чарльстон ЗВ", 38.3498, -81.6326, "America/New_York"],
+ ["מילווקי (ויסקונסין)", "Milwaukee Wisconsin Милуоки", 43.0389, -87.9065, "America/Chicago"],
+ ["שאיין (וויומינג)", "Cheyenne Wyoming Шайенн", 41.14, -104.8202, "America/Denver"],
+ ["אוטווה", "Ottawa Canada Оттава", 45.4215, -75.6972, "America/Toronto"],
+ ["קלגרי", "Calgary Canada Калгари", 51.0447, -114.0719, "America/Edmonton"],
+ ["וויניפג", "Winnipeg Canada Виннипег", 49.8951, -97.1384, "America/Winnipeg"],
+ ["טירנה (אלבניה)", "Tirana Albania Тирана", 41.3275, 19.8187, "Europe/Tirane"],
+ ["אנדורה", "Andorra Андорра", 42.5063, 1.5218, "Europe/Andorra"],
+ ["גראץ (אוסטריה)", "Graz Austria Грац", 47.0707, 15.4395, "Europe/Vienna"],
+ ["סרייבו (בוסניה)", "Sarajevo Bosnia Сараево", 43.8563, 18.4131, "Europe/Sarajevo"],
+ ["זאגרב (קרואטיה)", "Zagreb Croatia Загреб", 45.815, 15.9819, "Europe/Zagreb"],
+ ["דוברובניק (קרואטיה)", "Dubrovnik Croatia Дубровник", 42.6507, 18.0944, "Europe/Zagreb"],
+ ["ניקוסיה (קפריסין)", "Nicosia Cyprus Никосия", 35.1856, 33.3823, "Asia/Nicosia"],
+ ["ברנו (צ׳כיה)", "Brno Czech Брно", 49.1951, 16.6068, "Europe/Prague"],
+ ["קרלובי וארי", "Karlovy Vary Czech Карловы Вары", 50.231, 12.871, "Europe/Prague"],
+ ["ליון (צרפת)", "Lyon France Лион", 45.764, 4.8357, "Europe/Paris"],
+ ["שטרסבורג (צרפת)", "Strasbourg France Страсбург", 48.5734, 7.7521, "Europe/Paris"],
+ ["המבורג (גרמניה)", "Hamburg Germany Гамбург", 53.5511, 9.9937, "Europe/Berlin"],
+ ["דיסלדורף (גרמניה)", "Dusseldorf Germany Дюссельдорф", 51.2277, 6.7735, "Europe/Berlin"],
+ ["קלן (גרמניה)", "Cologne Koln Germany Кёльн", 50.9375, 6.9603, "Europe/Berlin"],
+ ["רייקיאוויק (איסלנד)", "Reykjavik Iceland Рейкьявик", 64.1466, -21.9426, "Atlantic/Reykjavik"],
+ ["דבלין (אירלנד)", "Dublin Ireland Дублин", 53.3498, -6.2603, "Europe/Dublin"],
+ ["ונציה (איטליה)", "Venice Italy Венеция", 45.4408, 12.3155, "Europe/Rome"],
+ ["פירנצה (איטליה)", "Florence Italy Флоренция", 43.7696, 11.2558, "Europe/Rome"],
+ ["נאפולי (איטליה)", "Naples Italy Неаполь", 40.8518, 14.2681, "Europe/Rome"],
+ ["פריסטינה (קוסובו)", "Pristina Kosovo Приштина", 42.6629, 21.1655, "Europe/Belgrade"],
+ ["ליכטנשטיין", "Vaduz Liechtenstein Вадуц", 47.141, 9.5209, "Europe/Vaduz"],
+ ["לוקסמבורג", "Luxembourg Люксембург", 49.6116, 6.1319, "Europe/Luxembourg"],
+ ["מלטה", "Valletta Malta Валлетта Мальта", 35.8989, 14.5146, "Europe/Malta"],
+ ["מונקו", "Monaco Монако", 43.7384, 7.4246, "Europe/Monaco"],
+ ["פודגוריצה (מונטנגרו)", "Podgorica Montenegro Подгорица", 42.4304, 19.2594, "Europe/Podgorica"],
+ ["בודווה (מונטנגרו)", "Budva Montenegro Будва", 42.2911, 18.8403, "Europe/Podgorica"],
+ ["רוטרדם (הולנד)", "Rotterdam Netherlands Роттердам", 51.9244, 4.4777, "Europe/Amsterdam"],
+ ["סקופיה (מקדוניה)", "Skopje North Macedonia Скопье", 41.9981, 21.4254, "Europe/Skopje"],
+ ["ברגן (נורבגיה)", "Bergen Norway Берген", 60.3913, 5.3221, "Europe/Oslo"],
+ ["פורטו (פורטוגל)", "Porto Portugal Порту", 41.1579, -8.6291, "Europe/Lisbon"],
+ ["קלוז׳ (רומניה)", "Cluj Romania Клуж", 46.7712, 23.6236, "Europe/Bucharest"],
+ ["ברטיסלבה (סלובקיה)", "Bratislava Slovakia Братислава", 48.1486, 17.1077, "Europe/Bratislava"],
+ ["קושיצה (סלובקיה)", "Kosice Slovakia Кошице", 48.7164, 21.2611, "Europe/Bratislava"],
+ ["לובליאנה (סלובניה)", "Ljubljana Slovenia Любляна", 46.0569, 14.5058, "Europe/Ljubljana"],
+ ["ולנסיה (ספרד)", "Valencia Spain Валенсия", 39.4699, -0.3763, "Europe/Madrid"],
+ ["מלאגה (ספרד)", "Malaga Spain Малага", 36.7213, -4.4214, "Europe/Madrid"],
+ ["טנריף (ספרד)", "Tenerife Canary Тенерифе", 28.4636, -16.2518, "Atlantic/Canary"],
+ ["גטבורג (שוודיה)", "Gothenburg Sweden Гётеборг", 57.7089, 11.9746, "Europe/Stockholm"],
+ ["ברן (שווייץ)", "Bern Switzerland Берн", 46.948, 7.4474, "Europe/Zurich"],
+ ["בזל (שווייץ)", "Basel Switzerland Базель", 47.5596, 7.5886, "Europe/Zurich"],
+ ["לוגאנו (שווייץ)", "Lugano Switzerland Лугано", 46.0037, 8.9511, "Europe/Zurich"],
+ ["לבוב (אוקראינה)", "Lviv Ukraine Львов", 49.8397, 24.0297, "Europe/Kiev"],
+ ["זפורוז׳יה (אוקראינה)", "Zaporizhzhia Ukraine Запорожье", 47.8388, 35.1396, "Europe/Kiev"],
+ ["ז׳יטומיר (אוקראינה)", "Zhytomyr Ukraine Житомир", 50.2547, 28.6587, "Europe/Kiev"],
+ ["צ׳רנוביץ (אוקראינה)", "Chernivtsi Ukraine Черновцы", 48.2921, 25.9358, "Europe/Kiev"],
+ ["מעזריטש (אוקראינה)", "Mezhyrich Mezritch Ukraine Межиричи", 50.556, 26.295, "Europe/Kiev"],
+ ["לוזנא (בלארוס)", "Liozna Belarus Лиозно", 55.027, 30.799, "Europe/Minsk"],
+ ["ויטבסק (בלארוס)", "Vitebsk Belarus Витебск", 55.1904, 30.2049, "Europe/Minsk"],
+ ["גומל (בלארוס)", "Gomel Belarus Гомель", 52.4412, 30.9878, "Europe/Minsk"],
+ ["ליאדי", "Lyady Liadi Ляды", 54.62, 31.08, "Europe/Moscow"],
+ ["אדינבורו (סקוטלנד)", "Edinburgh Scotland Эдинбург", 55.9533, -3.1883, "Europe/London"],
+ ["גייטסהד (אנגליה)", "Gateshead England Гейтсхед", 54.9527, -1.6034, "Europe/London"],
+ ["לידס (אנגליה)", "Leeds England Лидс", 53.8008, -1.5491, "Europe/London"],
+ ["קרדיף (וויילס)", "Cardiff Wales Кардифф", 51.4816, -3.1791, "Europe/London"],
+ ["בלפסט", "Belfast Белфаст", 54.5973, -5.9301, "Europe/London"],
+ ["גיברלטר", "Gibraltar Гибралтар", 36.1408, -5.3536, "Europe/Gibraltar"],
+ ["דאוגבפילס (לטביה)", "Daugavpils Latvia Даугавпилс", 55.875, 26.536, "Europe/Riga"],
+ ["קובנה (ליטא)", "Kaunas Lithuania Каунас", 54.8985, 23.9036, "Europe/Vilnius"],
+ ["לודז׳ (פולין)", "Lodz Poland Лодзь", 51.7592, 19.456, "Europe/Warsaw"],
+ ["איזמיר (טורקיה)", "Izmir Turkey Измир", 38.4237, 27.1428, "Europe/Istanbul"],
+ ["אנקרה (טורקיה)", "Ankara Turkey Анкара", 39.9334, 32.8597, "Europe/Istanbul"],
+ ["בטומי (גאורגיה)", "Batumi Georgia Батуми", 41.6168, 41.6367, "Asia/Tbilisi"],
+ ["כותאיסי (גאורגיה)", "Kutaisi Georgia Кутаиси", 42.2679, 42.6946, "Asia/Tbilisi"],
+ ["באלטי (מולדובה)", "Balti Moldova Бельцы", 47.7617, 27.9289, "Europe/Chisinau"],
+ ["טרטו (אסטוניה)", "Tartu Estonia Тарту", 58.378, 26.729, "Europe/Tallinn"],
+ ["כרתים (יוון)", "Crete Heraklion Greece Крит Ираклион", 35.3387, 25.1442, "Europe/Athens"],
+ ["רודוס (יוון)", "Rhodes Greece Родос", 36.4341, 28.2176, "Europe/Athens"],
+ ["ורנה (בולגריה)", "Varna Bulgaria Варна", 43.2141, 27.9147, "Europe/Sofia"],
+ ["דברצן (הונגריה)", "Debrecen Hungary Дебрецен", 47.5316, 21.6273, "Europe/Budapest"],
+ ["סאטמר (רומניה)", "Satu Mare Satmar Romania Сату-Маре", 47.7926, 22.8857, "Europe/Bucharest"],
+ ["נובי סאד (סרביה)", "Novi Sad Serbia Нови-Сад", 45.2671, 19.8335, "Europe/Belgrade"],
+ ["ארהוס (דנמרק)", "Aarhus Denmark Орхус", 56.1629, 10.2039, "Europe/Copenhagen"],
+ ["טורקו (פינלנד)", "Turku Finland Турку", 60.4518, 22.2666, "Europe/Helsinki"],
+ ["טיומן", "Tyumen Тюмень", 57.153, 65.5343, "Asia/Yekaterinburg"],
+ ["טומסק", "Tomsk Томск", 56.4846, 84.9476, "Asia/Tomsk"],
+ ["ברנאול", "Barnaul Барнаул", 53.3474, 83.7784, "Asia/Barnaul"],
+ ["קמרובו", "Kemerovo Кемерово", 55.3547, 86.0873, "Asia/Novokuznetsk"],
+ ["נובוקוזנצק", "Novokuznetsk Новокузнецк", 53.7557, 87.1099, "Asia/Novokuznetsk"],
+ ["אולן אודה", "Ulan-Ude Улан-Удэ", 51.8335, 107.5841, "Asia/Irkutsk"],
+ ["צ׳יטה", "Chita Чита", 52.034, 113.4994, "Asia/Chita"],
+ ["יקוטסק", "Yakutsk Якутск", 62.0355, 129.6755, "Asia/Yakutsk"],
+ ["מגדן", "Magadan Магадан", 59.5612, 150.8301, "Asia/Magadan"],
+ ["פטרופבלובסק קמצ׳טסקי", "Petropavlovsk-Kamchatsky Kamchatka Петропавловск-Камчатский", 53.0452, 158.6483, "Asia/Kamchatka"],
+ ["יוז׳נו סחלינסק", "Yuzhno-Sakhalinsk Sakhalin Южно-Сахалинск", 46.9591, 142.738, "Asia/Sakhalin"],
+ ["סורגוט", "Surgut Сургут", 61.254, 73.3962, "Asia/Yekaterinburg"],
+ ["אורנבורג", "Orenburg Оренбург", 51.7682, 55.0969, "Asia/Yekaterinburg"],
+ ["מגניטוגורסק", "Magnitogorsk Магнитогорск", 53.4072, 58.9791, "Asia/Yekaterinburg"],
+ ["איז׳בסק", "Izhevsk Ижевск", 56.8526, 53.2045, "Europe/Samara"],
+ ["טוליאטי", "Tolyatti Togliatti Тольятти", 53.5303, 49.3461, "Europe/Samara"],
+ ["אוליאנובסק", "Ulyanovsk Ульяновск", 54.3142, 48.4031, "Europe/Ulyanovsk"],
+ ["אסטרחן", "Astrakhan Астрахань", 46.3497, 48.0408, "Europe/Astrakhan"],
+ ["פנזה", "Penza Пенза", 53.1959, 45.0183, "Europe/Moscow"],
+ ["צ׳בוקסרי", "Cheboksary Чебоксары", 56.1439, 47.2489, "Europe/Moscow"],
+ ["קירוב", "Kirov Киров", 58.6036, 49.668, "Europe/Kirov"],
+ ["ריאזן", "Ryazan Рязань", 54.6269, 39.6916, "Europe/Moscow"],
+ ["ליפצק", "Lipetsk Липецк", 52.6031, 39.5708, "Europe/Moscow"],
+ ["קורסק", "Kursk Курск", 51.7304, 36.1926, "Europe/Moscow"],
+ ["בלגורוד", "Belgorod Белгород", 50.5997, 36.5986, "Europe/Moscow"],
+ ["בריאנסק", "Bryansk Брянск", 53.2521, 34.3717, "Europe/Moscow"],
+ ["אוריול", "Oryol Orel Орёл", 52.9703, 36.0635, "Europe/Moscow"],
+ ["סמולנסק", "Smolensk Смоленск", 54.7818, 32.0401, "Europe/Moscow"],
+ ["קלוגה", "Kaluga Калуга", 54.5293, 36.2754, "Europe/Moscow"],
+ ["טבר", "Tver Тверь", 56.8587, 35.9176, "Europe/Moscow"],
+ ["ולדימיר", "Vladimir Владимир", 56.1291, 40.4066, "Europe/Moscow"],
+ ["איבנובו", "Ivanovo Иваново", 57.0004, 40.9739, "Europe/Moscow"],
+ ["קוסטרומה", "Kostroma Кострома", 57.7665, 40.9269, "Europe/Moscow"],
+ ["וולוגדה", "Vologda Вологда", 59.2181, 39.8886, "Europe/Moscow"],
+ ["ארכנגלסק", "Arkhangelsk Архангельск", 64.5401, 40.5433, "Europe/Moscow"],
+ ["מורמנסק", "Murmansk Мурманск", 68.9585, 33.0827, "Europe/Moscow"],
+ ["פטרוזבודסק", "Petrozavodsk Петрозаводск", 61.7849, 34.3469, "Europe/Moscow"],
+ ["נובגורוד ולקי", "Veliky Novgorod Великий Новгород", 58.5215, 31.2755, "Europe/Moscow"],
+ ["פסקוב", "Pskov Псков", 57.8136, 28.3496, "Europe/Moscow"],
+ ["סטברופול", "Stavropol Ставрополь", 45.0445, 41.9691, "Europe/Moscow"],
+ ["ולדיקבקז", "Vladikavkaz Владикавказ", 43.0241, 44.682, "Europe/Moscow"],
+ ["גרוזני", "Grozny Грозный", 43.3178, 45.6949, "Europe/Moscow"],
+ ["נובורוסייסק", "Novorossiysk Новороссийск", 44.7235, 37.7686, "Europe/Moscow"],
+ ["טגנרוג", "Taganrog Таганрог", 47.2362, 38.8969, "Europe/Moscow"],
+ ["סבסטופול", "Sevastopol Севастополь", 44.6166, 33.5254, "Europe/Simferopol"],
+ ["ילטה", "Yalta Ялта", 44.4952, 34.1663, "Europe/Simferopol"],
+ ["ייבפטוריה", "Yevpatoria Evpatoria Евпатория", 45.1904, 33.3669, "Europe/Simferopol"],
+ ["ז׳לזנובודסק / קיסלובודסק", "Kislovodsk Кисловодск", 43.9133, 42.7208, "Europe/Moscow"],
+ ["קאספיסק", "Kaspiysk Каспийск", 42.8816, 47.639, "Europe/Moscow"],
+ ["נוריטלסק", "Norilsk Норильск", 69.3558, 88.1893, "Asia/Krasnoyarsk"],
+ ["קאבול (אפגניסטן)", "Kabul Afghanistan Кабул", 34.5553, 69.2075, "Asia/Kabul"],
+ ["דאקה (בנגלדש)", "Dhaka Bangladesh Дакка", 23.8103, 90.4125, "Asia/Dhaka"],
+ ["טימפו (בהוטן)", "Thimphu Bhutan Тхимпху", 27.4728, 89.639, "Asia/Thimphu"],
+ ["ברוניי", "Bandar Seri Begawan Brunei Бруней", 4.9031, 114.9398, "Asia/Brunei"],
+ ["פנום פן (קמבודיה)", "Phnom Penh Cambodia Пномпень", 11.5564, 104.9282, "Asia/Phnom_Penh"],
+ ["צ׳נגדו (סין)", "Chengdu China Чэнду", 30.5728, 104.0668, "Asia/Shanghai"],
+ ["ג׳קרטה (אינדונזיה)", "Jakarta Indonesia Джакарта", -6.2088, 106.8456, "Asia/Jakarta"],
+ ["בנגלור (הודו)", "Bangalore Bengaluru India Бангалор", 12.9716, 77.5946, "Asia/Kolkata"],
+ ["צ׳נאי (הודו)", "Chennai India Ченнаи", 13.0827, 80.2707, "Asia/Kolkata"],
+ ["קולקטה (הודו)", "Kolkata Calcutta India Калькутта", 22.5726, 88.3639, "Asia/Kolkata"],
+ ["מנאלי (הודו)", "Manali India Манали", 32.2432, 77.1892, "Asia/Kolkata"],
+ ["דהרמסלה (הודו)", "Dharamshala India Дхарамсала", 32.219, 76.3234, "Asia/Kolkata"],
+ ["פושקר (הודו)", "Pushkar India Пушкар", 26.4897, 74.5511, "Asia/Kolkata"],
+ ["טהרן (איראן)", "Tehran Iran Тегеран", 35.6892, 51.389, "Asia/Tehran"],
+ ["בגדד (עיראק)", "Baghdad Iraq Багдад", 33.3152, 44.3661, "Asia/Baghdad"],
+ ["ארביל (עיראק)", "Erbil Iraq Эрбиль", 36.1911, 44.0092, "Asia/Baghdad"],
+ ["עמאן (ירדן)", "Amman Jordan Амман", 31.9454, 35.9284, "Asia/Amman"],
+ ["סאפורו (יפן)", "Sapporo Japan Саппоро", 43.0618, 141.3545, "Asia/Tokyo"],
+ ["פוקואוקה (יפן)", "Fukuoka Japan Фукуока", 33.5904, 130.4017, "Asia/Tokyo"],
+ ["שימקנט (קזחסטן)", "Shymkent Kazakhstan Шымкент", 42.3417, 69.5901, "Asia/Almaty"],
+ ["קרגנדה (קזחסטן)", "Karaganda Kazakhstan Караганда", 49.8047, 73.1094, "Asia/Almaty"],
+ ["כווית", "Kuwait City Эль-Кувейт", 29.3759, 47.9774, "Asia/Kuwait"],
+ ["ויינטיאן (לאוס)", "Vientiane Laos Вьентьян", 17.9757, 102.6331, "Asia/Vientiane"],
+ ["ביירות (לבנון)", "Beirut Lebanon Бейрут", 33.8938, 35.5018, "Asia/Beirut"],
+ ["פנאנג (מלזיה)", "Penang Malaysia Пенанг", 5.4164, 100.3327, "Asia/Kuala_Lumpur"],
+ ["אולן בטור (מונגוליה)", "Ulaanbaatar Mongolia Улан-Батор", 47.8864, 106.9057, "Asia/Ulaanbaatar"],
+ ["יאנגון (מיאנמר)", "Yangon Myanmar Янгон", 16.8409, 96.1735, "Asia/Yangon"],
+ ["פוקרה (נפאל)", "Pokhara Nepal Покхара", 28.2096, 83.9856, "Asia/Kathmandu"],
+ ["פיונגיאנג (צפון קוריאה)", "Pyongyang North Korea Пхеньян", 39.0392, 125.7625, "Asia/Pyongyang"],
+ ["מוסקט (עומאן)", "Muscat Oman Маскат", 23.588, 58.3829, "Asia/Muscat"],
+ ["קראצ׳י (פקיסטן)", "Karachi Pakistan Карачи", 24.8607, 67.0011, "Asia/Karachi"],
+ ["איסלאמבאד (פקיסטן)", "Islamabad Pakistan Исламабад", 33.6844, 73.0479, "Asia/Karachi"],
+ ["סבו (פיליפינים)", "Cebu Philippines Себу", 10.3157, 123.8854, "Asia/Manila"],
+ ["דוחה (קטאר)", "Doha Qatar Доха", 25.2854, 51.531, "Asia/Qatar"],
+ ["ריאד (סעודיה)", "Riyadh Saudi Arabia Эр-Рияд", 24.7136, 46.6753, "Asia/Riyadh"],
+ ["ג׳דה (סעודיה)", "Jeddah Saudi Arabia Джидда", 21.4858, 39.1925, "Asia/Riyadh"],
+ ["בוסאן (קוריאה)", "Busan Korea Пусан", 35.1796, 129.0756, "Asia/Seoul"],
+ ["דמשק (סוריה)", "Damascus Syria Дамаск", 33.5138, 36.2765, "Asia/Damascus"],
+ ["אשגבט (טורקמניסטן)", "Ashgabat Turkmenistan Ашхабад", 37.9601, 58.3261, "Asia/Ashgabat"],
+ ["דילי (טימור)", "Dili East Timor Дили", -8.5569, 125.5603, "Asia/Dili"],
+ ["צנעא (תימן)", "Sanaa Yemen Сана", 15.3694, 44.191, "Asia/Aden"],
+ ["דה נאנג (וייטנאם)", "Da Nang Vietnam Дананг", 16.0544, 108.2022, "Asia/Ho_Chi_Minh"],
+ ["נה טראנג (וייטנאם)", "Nha Trang Vietnam Нячанг", 12.2388, 109.1967, "Asia/Ho_Chi_Minh"],
+ ["פטאיה (תאילנד)", "Pattaya Thailand Паттайя", 12.9236, 100.8825, "Asia/Bangkok"],
+ ["קופנגן (תאילנד)", "Koh Phangan Thailand Панган", 9.738, 100.0137, "Asia/Bangkok"],
+ ["נמנגן (אוזבקיסטן)", "Namangan Uzbekistan Наманган", 40.9983, 71.6726, "Asia/Tashkent"],
+ ["אנדיג׳ן (אוזבקיסטן)", "Andijan Uzbekistan Андижан", 40.7821, 72.3442, "Asia/Tashkent"],
+ ["שארם א-שייח׳", "Sharm el-Sheikh Egypt Шарм-эш-Шейх", 27.9158, 34.33, "Africa/Cairo"],
+ ["מקאו", "Macau Макао", 22.1987, 113.5439, "Asia/Macau"],
+ ["אדלייד (אוסטרליה)", "Adelaide Australia Аделаида", -34.9285, 138.6007, "Australia/Adelaide"],
+ ["קנברה (אוסטרליה)", "Canberra Australia Канберра", -35.2809, 149.13, "Australia/Sydney"],
+ ["הובארט (טסמניה)", "Hobart Tasmania Australia Хобарт", -42.8821, 147.3272, "Australia/Hobart"],
+ ["דרווין (אוסטרליה)", "Darwin Australia Дарвин", -12.4634, 130.8456, "Australia/Darwin"],
+ ["גולד קוסט (אוסטרליה)", "Gold Coast Australia Голд-Кост", -28.0167, 153.4, "Australia/Brisbane"],
+ ["קיירנס (אוסטרליה)", "Cairns Australia Кэрнс", -16.9186, 145.7781, "Australia/Brisbane"],
+ ["וולינגטון (ניו זילנד)", "Wellington New Zealand Веллингтон", -41.2865, 174.7762, "Pacific/Auckland"],
+ ["קרייסטצ׳רץ׳ (ניו זילנד)", "Christchurch New Zealand Крайстчерч", -43.5321, 172.6362, "Pacific/Auckland"],
+ ["קווינסטאון (ניו זילנד)", "Queenstown New Zealand Квинстаун", -45.0312, 168.6626, "Pacific/Auckland"],
+ ["פיג׳י", "Fiji Suva Nadi Фиджи", -17.7134, 178.065, "Pacific/Fiji"],
+ ["פורט מורסבי (פפואה)", "Port Moresby Papua New Guinea Порт-Морсби", -9.4438, 147.1803, "Pacific/Port_Moresby"],
+ ["טהיטי", "Tahiti Papeete Таити", -17.5516, -149.5585, "Pacific/Tahiti"],
+ ["בליז", "Belize City Белиз", 17.5046, -88.1962, "America/Belize"],
+ ["סן חוזה (קוסטה ריקה)", "San Jose Costa Rica Сан-Хосе", 9.9281, -84.0907, "America/Costa_Rica"],
+ ["גואטמלה סיטי", "Guatemala City Гватемала", 14.6349, -90.5069, "America/Guatemala"],
+ ["טגוסיגלפה (הונדורס)", "Tegucigalpa Honduras Тегусигальпа", 14.0723, -87.1921, "America/Tegucigalpa"],
+ ["מנגואה (ניקרגואה)", "Managua Nicaragua Манагуа", 12.115, -86.2362, "America/Managua"],
+ ["גוודלחרה (מקסיקו)", "Guadalajara Mexico Гвадалахара", 20.6597, -103.3496, "America/Mexico_City"],
+ ["מונטריי (מקסיקו)", "Monterrey Mexico Монтеррей", 25.6866, -100.3161, "America/Monterrey"],
+ ["טיחואנה (מקסיקו)", "Tijuana Mexico Тихуана", 32.5149, -117.0382, "America/Tijuana"],
+ ["פלאיה דל כרמן (מקסיקו)", "Playa del Carmen Mexico Плайя-дель-Кармен", 20.6296, -87.0739, "America/Cancun"],
+ ["הוואנה (קובה)", "Havana Cuba Гавана", 23.1136, -82.3666, "America/Havana"],
+ ["סנטו דומינגו", "Santo Domingo Dominican Санто-Доминго", 18.4861, -69.9312, "America/Santo_Domingo"],
+ ["פונטה קאנה", "Punta Cana Dominican Пунта-Кана", 18.5601, -68.3725, "America/Santo_Domingo"],
+ ["סן חואן (פוארטו ריקו)", "San Juan Puerto Rico Сан-Хуан", 18.4655, -66.1057, "America/Puerto_Rico"],
+ ["קינגסטון (ג׳מייקה)", "Kingston Jamaica Кингстон", 17.9712, -76.7936, "America/Jamaica"],
+ ["נסאו (בהאמה)", "Nassau Bahamas Нассау", 25.0443, -77.3504, "America/Nassau"],
+ ["פורט או פרינס (האיטי)", "Port-au-Prince Haiti Порт-о-Пренс", 18.5944, -72.3074, "America/Port-au-Prince"],
+ ["קורסאו", "Curacao Willemstad Кюрасао", 12.1091, -68.9316, "America/Curacao"],
+ ["ארובה", "Aruba Oranjestad Аруба", 12.5092, -70.0086, "America/Aruba"],
+ ["ברבדוס", "Barbados Bridgetown Барбадос", 13.0975, -59.6167, "America/Barbados"],
+ ["סנט מרטן", "Sint Maarten St Martin Сен-Мартен", 18.0425, -63.0548, "America/Lower_Princes"],
+ ["קורדובה (ארגנטינה)", "Cordoba Argentina Кордова", -31.4201, -64.1888, "America/Argentina/Cordoba"],
+ ["לה פאס (בוליביה)", "La Paz Bolivia Ла-Пас", -16.4897, -68.1193, "America/La_Paz"],
+ ["סנטה קרוז (בוליביה)", "Santa Cruz Bolivia Санта-Крус", -17.8146, -63.1561, "America/La_Paz"],
+ ["ברזיליה", "Brasilia Brazil Бразилиа", -15.7939, -47.8828, "America/Sao_Paulo"],
+ ["סלבדור (ברזיל)", "Salvador Bahia Brazil Салвадор", -12.9777, -38.5016, "America/Bahia"],
+ ["רסיפה (ברזיל)", "Recife Brazil Ресифи", -8.0476, -34.877, "America/Recife"],
+ ["מנאוס (ברזיל)", "Manaus Brazil Манаус", -3.119, -60.0217, "America/Manaus"],
+ ["פורטו אלגרה (ברזיל)", "Porto Alegre Brazil Порту-Алегри", -30.0346, -51.2177, "America/Sao_Paulo"],
+ ["מדיין (קולומביה)", "Medellin Colombia Медельин", 6.2442, -75.5812, "America/Bogota"],
+ ["קרטחנה (קולומביה)", "Cartagena Colombia Картахена", 10.391, -75.4794, "America/Bogota"],
+ ["קיטו (אקוודור)", "Quito Ecuador Кито", -0.1807, -78.4678, "America/Guayaquil"],
+ ["גואיאקיל (אקוודור)", "Guayaquil Ecuador Гуаякиль", -2.1709, -79.9224, "America/Guayaquil"],
+ ["גאלאפגוס", "Galapagos Галапагос", -0.743, -90.316, "Pacific/Galapagos"],
+ ["ג׳ורג׳טאון (גיאנה)", "Georgetown Guyana Джорджтаун", 6.8013, -58.1551, "America/Guyana"],
+ ["אסונסיון (פרגוואי)", "Asuncion Paraguay Асунсьон", -25.2637, -57.5759, "America/Asuncion"],
+ ["לימה (פרו)", "Lima Peru Лима", -12.0464, -77.0428, "America/Lima"],
+ ["קוסקו (פרו)", "Cusco Peru Куско", -13.532, -71.9675, "America/Lima"],
+ ["פרמריבו (סורינאם)", "Paramaribo Suriname Парамарибо", 5.852, -55.2038, "America/Paramaribo"],
+ ["פונטה דל אסטה (אורוגוואי)", "Punta del Este Uruguay Пунта-дель-Эсте", -34.962, -54.951, "America/Montevideo"],
+ ["קראקס (ונצואלה)", "Caracas Venezuela Каракас", 10.4806, -66.9036, "America/Caracas"],
+ ["ואלפראיסו (צ׳ילה)", "Valparaiso Chile Вальпараисо", -33.0472, -71.6127, "America/Santiago"],
+ ["אושואיה (ארגנטינה)", "Ushuaia Argentina Ушуая", -54.8019, -68.303, "America/Argentina/Ushuaia"],
+ ["ברילוצ׳ה (ארגנטינה)", "Bariloche Argentina Барилоче", -41.1335, -71.3103, "America/Argentina/Salta"],
+ // ---- תוספת: מקומות עם בתי חב"ד וישיבות ----
+ ["מגדל העמק", "Migdal HaEmek Мигдаль-ха-Эмек", 32.6766, 35.2397, "Asia/Jerusalem"],
+ ["קרית גת", "Kiryat Gat Кирьят-Гат", 31.61, 34.7642, "Asia/Jerusalem"],
+ ["לוד", "Lod Лод", 31.951, 34.8881, "Asia/Jerusalem"],
+ ["רמלה", "Ramla Рамле", 31.9293, 34.8656, "Asia/Jerusalem"],
+ ["אשקלון", "Ashkelon Ашкелон", 31.6688, 34.5743, "Asia/Jerusalem"],
+ ["נתיבות", "Netivot Нетивот", 31.4211, 34.5886, "Asia/Jerusalem"],
+ ["שדרות", "Sderot Сдерот", 31.525, 34.5961, "Asia/Jerusalem"],
+ ["אופקים", "Ofakim Офаким", 31.3141, 34.6203, "Asia/Jerusalem"],
+ ["דימונה", "Dimona Димона", 31.068, 35.033, "Asia/Jerusalem"],
+ ["ערד", "Arad Арад", 31.2589, 35.2128, "Asia/Jerusalem"],
+ ["ירוחם", "Yeruham Йерухам", 30.9875, 34.9295, "Asia/Jerusalem"],
+ ["מצפה רמון", "Mitzpe Ramon Мицпе-Рамон", 30.61, 34.8013, "Asia/Jerusalem"],
+ ["קרית שמונה", "Kiryat Shmona Кирьят-Шмона", 33.2073, 35.5721, "Asia/Jerusalem"],
+ ["ראש פינה", "Rosh Pina Рош-Пина", 32.969, 35.542, "Asia/Jerusalem"],
+ ["כרמיאל", "Karmiel Кармиэль", 32.919, 35.295, "Asia/Jerusalem"],
+ ["נהריה", "Nahariya Нагария", 33.0059, 35.0941, "Asia/Jerusalem"],
+ ["עכו", "Akko Acre Акко", 32.9281, 35.082, "Asia/Jerusalem"],
+ ["מעלות תרשיחא", "Maalot Маалот", 33.0167, 35.2717, "Asia/Jerusalem"],
+ ["עפולה", "Afula Афула", 32.6078, 35.2897, "Asia/Jerusalem"],
+ ["בית שאן", "Beit Shean Бейт-Шеан", 32.4973, 35.4962, "Asia/Jerusalem"],
+ ["יקנעם", "Yokneam Йокнеам", 32.659, 35.105, "Asia/Jerusalem"],
+ ["קרית אתא", "Kiryat Ata Кирьят-Ата", 32.8115, 35.1132, "Asia/Jerusalem"],
+ ["קרית ביאליק", "Kiryat Bialik Кирьят-Бялик", 32.8275, 35.0858, "Asia/Jerusalem"],
+ ["קרית מוצקין", "Kiryat Motzkin Кирьят-Моцкин", 32.837, 35.077, "Asia/Jerusalem"],
+ ["זכרון יעקב", "Zichron Yaakov Зихрон-Яаков", 32.5714, 34.952, "Asia/Jerusalem"],
+ ["חדרה", "Hadera Хадера", 32.434, 34.9196, "Asia/Jerusalem"],
+ ["כפר סבא", "Kfar Saba Кфар-Саба", 32.1782, 34.9076, "Asia/Jerusalem"],
+ ["רעננה", "Raanana Раанана", 32.1848, 34.8713, "Asia/Jerusalem"],
+ ["הרצליה", "Herzliya Герцлия", 32.1624, 34.8447, "Asia/Jerusalem"],
+ ["רמת גן", "Ramat Gan Рамат-Ган", 32.0684, 34.8248, "Asia/Jerusalem"],
+ ["חולון", "Holon Холон", 32.0158, 34.7874, "Asia/Jerusalem"],
+ ["בת ים", "Bat Yam Бат-Ям", 32.0171, 34.7454, "Asia/Jerusalem"],
+ ["אור יהודה", "Or Yehuda Ор-Йехуда", 32.0298, 34.855, "Asia/Jerusalem"],
+ ["רחובות", "Rehovot Реховот", 31.8928, 34.8113, "Asia/Jerusalem"],
+ ["נס ציונה", "Ness Ziona Нес-Циона", 31.9293, 34.7987, "Asia/Jerusalem"],
+ ["יבנה", "Yavne Явне", 31.878, 34.739, "Asia/Jerusalem"],
+ ["קרית עקרון", "Kiryat Ekron Кирьят-Экрон", 31.861, 34.823, "Asia/Jerusalem"],
+ ["בית שמש", "Beit Shemesh Бейт-Шемеш", 31.747, 34.9881, "Asia/Jerusalem"],
+ ["מעלה אדומים", "Maale Adumim Маале-Адумим", 31.777, 35.298, "Asia/Jerusalem", 40],
+ ["אפרת", "Efrat Эфрат", 31.653, 35.15, "Asia/Jerusalem"],
+ ["קרית ארבע", "Kiryat Arba Кирьят-Арба", 31.531, 35.12, "Asia/Jerusalem"],
+ ["אריאל", "Ariel Ариэль", 32.104, 35.173, "Asia/Jerusalem"],
+ ["עמנואל", "Emmanuel Иммануэль", 32.161, 35.135, "Asia/Jerusalem"],
+ ["אלעד", "Elad Эльад", 32.052, 34.951, "Asia/Jerusalem"],
+ ["מודיעין עילית", "Modiin Illit Модиин-Илит", 31.932, 35.042, "Asia/Jerusalem"],
+ ["קצרין", "Katzrin Golan Кацрин", 32.9925, 35.6935, "Asia/Jerusalem"],
+ ["שלומי", "Shlomi Шломи", 33.076, 35.145, "Asia/Jerusalem"],
+ ["נשר", "Nesher Нешер", 32.766, 35.044, "Asia/Jerusalem"],
+ ["חריש", "Harish Хариш", 32.46, 35.045, "Asia/Jerusalem"],
+ ["כפר יונה", "Kfar Yona Кфар-Йона", 32.317, 34.935, "Asia/Jerusalem"],
+ ["אבן יהודה", "Even Yehuda Эвен-Йехуда", 32.27, 34.887, "Asia/Jerusalem"],
+ ["ראש העין", "Rosh HaAyin Рош-ха-Аин", 32.0956, 34.9566, "Asia/Jerusalem"],
+ ["גבעת שמואל", "Givat Shmuel Гиват-Шмуэль", 32.077, 34.849, "Asia/Jerusalem"],
+ ["קרית אונו", "Kiryat Ono Кирьят-Оно", 32.063, 34.855, "Asia/Jerusalem"],
+ ["רמת השרון", "Ramat HaSharon Рамат-ха-Шарон", 32.146, 34.839, "Asia/Jerusalem"],
+ ["פלטבוש (ברוקלין)", "Flatbush Brooklyn Флэтбуш", 40.641, -73.959, "America/New_York"],
+ ["סטטן איילנד", "Staten Island Статен-Айленд", 40.5795, -74.1502, "America/New_York"],
+ ["ריברדייל (ברונקס)", "Riverdale Bronx Ривердейл", 40.89, -73.912, "America/New_York"],
+ ["קווינס – פורסט הילס", "Forest Hills Queens Квинс", 40.7181, -73.8448, "America/New_York"],
+ ["גרייט נק", "Great Neck Long Island Грейт-Нек", 40.8007, -73.7285, "America/New_York"],
+ ["פייב טאונס – סדרהרסט", "Five Towns Cedarhurst Long Island Седархерст", 40.6229, -73.7243, "America/New_York"],
+ ["לונג ביץ׳ (ניו יורק)", "Long Beach New York Лонг-Бич", 40.5884, -73.6579, "America/New_York"],
+ ["ווייט פליינס (וסטצ׳סטר)", "White Plains Westchester Уайт-Плейнс", 41.034, -73.7629, "America/New_York"],
+ ["רוצ׳סטר (ניו יורק)", "Rochester New York Рочестер", 43.1566, -77.6088, "America/New_York"],
+ ["סירקיוז (ניו יורק)", "Syracuse New York Сиракьюс", 43.0481, -76.1474, "America/New_York"],
+ ["איתקה (ניו יורק)", "Ithaca New York Cornell Итака", 42.444, -76.5019, "America/New_York"],
+ ["ניו ברונסוויק (ראטגרס)", "New Brunswick Rutgers NJ Нью-Брансуик", 40.4862, -74.4518, "America/New_York"],
+ ["פרינסטון", "Princeton NJ Принстон", 40.3573, -74.6672, "America/New_York"],
+ ["טינק", "Teaneck NJ Тинек", 40.8976, -74.016, "America/New_York"],
+ ["פסאיק", "Passaic NJ Пассейик", 40.8568, -74.1285, "America/New_York"],
+ ["צ׳רי היל", "Cherry Hill NJ Черри-Хилл", 39.9348, -75.0307, "America/New_York"],
+ ["סטמפורד (קונטיקט)", "Stamford Connecticut Стамфорд", 41.0534, -73.5387, "America/New_York"],
+ ["ווסט הרטפורד", "West Hartford Connecticut Уэст-Хартфорд", 41.7621, -72.742, "America/New_York"],
+ ["ברוקליין (בוסטון)", "Brookline Massachusetts Бруклайн", 42.3318, -71.1212, "America/New_York"],
+ ["ווסטר (מסצ׳וסטס)", "Worcester Massachusetts Вустер", 42.2626, -71.8023, "America/New_York"],
+ ["סילבר ספרינג (מרילנד)", "Silver Spring Maryland Силвер-Спринг", 38.9907, -77.0261, "America/New_York"],
+ ["פוטומק (מרילנד)", "Potomac Maryland Потомак", 39.0182, -77.2086, "America/New_York"],
+ ["מיאמי ביץ׳", "Miami Beach Майами-Бич", 25.7907, -80.13, "America/New_York"],
+ ["סרפסייד", "Surfside Florida Сёрфсайд", 25.8784, -80.1256, "America/New_York"],
+ ["נורת׳ מיאמי ביץ׳", "North Miami Beach Норт-Майами-Бич", 25.9331, -80.1625, "America/New_York"],
+ ["אוונטורה", "Aventura Florida Авентура", 25.9565, -80.1392, "America/New_York"],
+ ["הוליווד (פלורידה)", "Hollywood Florida Холливуд Флорида", 26.0112, -80.1495, "America/New_York"],
+ ["פורט לודרדייל", "Fort Lauderdale Форт-Лодердейл", 26.1224, -80.1373, "America/New_York"],
+ ["פארקלנד (פלורידה)", "Parkland Florida Паркленд", 26.3101, -80.2373, "America/New_York"],
+ ["ווסט פאלם ביץ׳", "West Palm Beach Уэст-Палм-Бич", 26.7153, -80.0534, "America/New_York"],
+ ["טמפה", "Tampa Florida Тампа", 27.9506, -82.4572, "America/New_York"],
+ ["ג׳קסונוויל", "Jacksonville Florida Джексонвилл", 30.3322, -81.6557, "America/New_York"],
+ ["ראלי (צפון קרוליינה)", "Raleigh North Carolina Роли", 35.7796, -78.6382, "America/New_York"],
+ ["קולומבוס (אוהיו)", "Columbus Ohio Колумбус", 39.9612, -82.9988, "America/New_York"],
+ ["אוק פארק (דטרויט)", "Oak Park Michigan Оук-Парк", 42.4595, -83.1827, "America/Detroit"],
+ ["ווסט בלומפילד", "West Bloomfield Michigan Уэст-Блумфилд", 42.5687, -83.3835, "America/Detroit"],
+ ["סקוקי (שיקגו)", "Skokie Chicago Скоки", 42.0324, -87.7416, "America/Chicago"],
+ ["פוסטוויל (איווה)", "Postville Iowa Поствилл", 43.0847, -91.5682, "America/Chicago"],
+ ["סן אנטוניו", "San Antonio Texas Сан-Антонио", 29.4241, -98.4936, "America/Chicago"],
+ ["אל פאסו", "El Paso Texas Эль-Пасо", 31.7619, -106.485, "America/Denver"],
+ ["סקוטסדייל", "Scottsdale Arizona Скоттсдейл", 33.4942, -111.9261, "America/Phoenix"],
+ ["טוסון", "Tucson Arizona Тусон", 32.2226, -110.9747, "America/Phoenix"],
+ ["פאלם ספרינגס", "Palm Springs California Палм-Спрингс", 33.8303, -116.5453, "America/Los_Angeles"],
+ ["אירוויין", "Irvine California Ирвайн", 33.6846, -117.8265, "America/Los_Angeles"],
+ ["פיקו רוברטסון (לוס אנג׳לס)", "Pico Robertson Los Angeles Пико-Робертсон", 34.0522, -118.383, "America/Los_Angeles"],
+ ["אנסינו / ואלי", "Encino San Fernando Valley Энсино", 34.1517, -118.5214, "America/Los_Angeles"],
+ ["סנטה מוניקה", "Santa Monica Санта-Моника", 34.0195, -118.4912, "America/Los_Angeles"],
+ ["סן חוזה (קליפורניה)", "San Jose California Сан-Хосе Калифорния", 37.3382, -121.8863, "America/Los_Angeles"],
+ ["פאלו אלטו", "Palo Alto California Пало-Альто", 37.4419, -122.143, "America/Los_Angeles"],
+ ["ברקלי", "Berkeley California Беркли", 37.8715, -122.273, "America/Los_Angeles"],
+ ["סקרמנטו", "Sacramento California Сакраменто", 38.5816, -121.4944, "America/Los_Angeles"],
+ ["תורנהיל (טורונטו)", "Thornhill Toronto Торнхилл", 43.815, -79.424, "America/Toronto"],
+ ["המילטון (קנדה)", "Hamilton Ontario Гамильтон", 43.2557, -79.8711, "America/Toronto"],
+ ["קוויבק סיטי", "Quebec City Квебек", 46.8139, -71.208, "America/Toronto"],
+ ["הליפקס", "Halifax Canada Галифакс", 44.6488, -63.5752, "America/Halifax"],
+ ["אדמונטון", "Edmonton Canada Эдмонтон", 53.5461, -113.4938, "America/Edmonton"],
+ ["ויקטוריה (קנדה)", "Victoria British Columbia Виктория", 48.4284, -123.3656, "America/Vancouver"],
+ ["רג׳ינה (קנדה)", "Regina Saskatchewan Реджайна", 50.4452, -104.6189, "America/Regina"],
+ ["סטמפורד היל (לונדון)", "Stamford Hill London Стэмфорд-Хилл", 51.571, -0.073, "Europe/London"],
+ ["גולדרס גרין / הנדון", "Golders Green Hendon London Голдерс-Грин", 51.577, -0.199, "Europe/London"],
+ ["גלזגו", "Glasgow Scotland Глазго", 55.8642, -4.2518, "Europe/London"],
+ ["ליברפול", "Liverpool Ливерпуль", 53.4084, -2.9916, "Europe/London"],
+ ["בירמינגהאם (אנגליה)", "Birmingham England Бирмингем Англия", 52.4862, -1.8904, "Europe/London"],
+ ["בורנמות׳", "Bournemouth Борнмут", 50.7192, -1.8808, "Europe/London"],
+ ["אוקספורד", "Oxford Оксфорд", 51.752, -1.2577, "Europe/London"],
+ ["קיימברידג׳", "Cambridge England Кембридж", 52.2053, 0.1218, "Europe/London"],
+ ["סאות׳פורט", "Southport Саутпорт", 53.6458, -3.0105, "Europe/London"],
+ ["ברייטון", "Brighton Брайтон", 50.8225, -0.1372, "Europe/London"],
+ ["ברינוי (פריז)", "Brunoy Paris Бруной", 48.6979, 2.5045, "Europe/Paris"],
+ ["סרסל (פריז)", "Sarcelles Paris Сарсель", 48.9973, 2.3797, "Europe/Paris"],
+ ["וינסן (פריז)", "Vincennes Paris Венсен", 48.8474, 2.4398, "Europe/Paris"],
+ ["טולוז", "Toulouse France Тулуза", 43.6047, 1.4442, "Europe/Paris"],
+ ["בורדו", "Bordeaux France Бордо", 44.8378, -0.5792, "Europe/Paris"],
+ ["מונפלייה", "Montpellier France Монпелье", 43.6108, 3.8767, "Europe/Paris"],
+ ["ליל", "Lille France Лилль", 50.6292, 3.0573, "Europe/Paris"],
+ ["מץ", "Metz France Мец", 49.1193, 6.1757, "Europe/Paris"],
+ ["ננסי", "Nancy France Нанси", 48.6921, 6.1844, "Europe/Paris"],
+ ["גרנובל", "Grenoble France Гренобль", 45.1885, 5.7245, "Europe/Paris"],
+ ["קאן", "Cannes France Канны", 43.5528, 7.0174, "Europe/Paris"],
+ ["אקס לה בן", "Aix-les-Bains France Экс-ле-Бен", 45.6884, 5.915, "Europe/Paris"],
+ ["קורשבל", "Courchevel France Куршевель", 45.4154, 6.6347, "Europe/Paris"],
+ ["האג", "The Hague Den Haag Гаага", 52.0705, 4.3007, "Europe/Amsterdam"],
+ ["אוטרכט", "Utrecht Утрехт", 52.0907, 5.1214, "Europe/Amsterdam"],
+ ["מאסטריכט", "Maastricht Маастрихт", 50.8514, 5.691, "Europe/Amsterdam"],
+ ["ליאז׳", "Liege Belgium Льеж", 50.6326, 5.5797, "Europe/Brussels"],
+ ["קנוקה", "Knokke Belgium Кнокке", 51.35, 3.287, "Europe/Brussels"],
+ ["לייפציג", "Leipzig Лейпциг", 51.3397, 12.3731, "Europe/Berlin"],
+ ["דרזדן", "Dresden Дрезден", 51.0504, 13.7373, "Europe/Berlin"],
+ ["הנובר", "Hannover Ганновер", 52.3759, 9.732, "Europe/Berlin"],
+ ["שטוטגרט", "Stuttgart Штутгарт", 48.7758, 9.1829, "Europe/Berlin"],
+ ["פוטסדאם", "Potsdam Потсдам", 52.3906, 13.0645, "Europe/Berlin"],
+ ["נירנברג", "Nuremberg Нюрнберг", 49.4521, 11.0767, "Europe/Berlin"],
+ ["היידלברג", "Heidelberg Гейдельберг", 49.3988, 8.6724, "Europe/Berlin"],
+ ["ברמן", "Bremen Бремен", 53.0793, 8.8017, "Europe/Berlin"],
+ ["דורטמונד", "Dortmund Дортмунд", 51.5136, 7.4653, "Europe/Berlin"],
+ ["זלצבורג", "Salzburg Зальцбург", 47.8095, 13.055, "Europe/Vienna"],
+ ["אינסברוק", "Innsbruck Инсбрук", 47.2692, 11.4041, "Europe/Vienna"],
+ ["דאבוס", "Davos Давос", 46.8027, 9.836, "Europe/Zurich"],
+ ["ארוזה", "Arosa Ароза", 46.7783, 9.679, "Europe/Zurich"],
+ ["סנט מוריץ", "St. Moritz Санкт-Мориц", 46.4908, 9.8355, "Europe/Zurich"],
+ ["לוצרן", "Lucerne Luzern Люцерн", 47.0502, 8.3093, "Europe/Zurich"],
+ ["לוזאן", "Lausanne Лозанна", 46.5197, 6.6323, "Europe/Zurich"],
+ ["אנגלברג (שווייץ)", "Engelberg Энгельберг", 46.8211, 8.4013, "Europe/Zurich"],
+ ["בולוניה", "Bologna Болонья", 44.4949, 11.3426, "Europe/Rome"],
+ ["טורינו", "Turin Torino Турин", 45.0703, 7.6869, "Europe/Rome"],
+ ["גנואה", "Genoa Генуя", 44.4056, 8.9463, "Europe/Rome"],
+ ["פלרמו (סיציליה)", "Palermo Sicily Палермо", 38.1157, 13.3615, "Europe/Rome"],
+ ["קטניה (סיציליה)", "Catania Sicily Катания", 37.5079, 15.083, "Europe/Rome"],
+ ["טריאסטה", "Trieste Триест", 45.6495, 13.7768, "Europe/Rome"],
+ ["ליבורנו", "Livorno Ливорно", 43.5485, 10.3106, "Europe/Rome"],
+ ["קאפרי", "Capri Капри", 40.5532, 14.2222, "Europe/Rome"],
+ ["מרבייה", "Marbella Марбелья", 36.5101, -4.8825, "Europe/Madrid"],
+ ["איביזה", "Ibiza Ибица", 38.9067, 1.4206, "Europe/Madrid"],
+ ["פלמה דה מיורקה", "Palma de Mallorca Пальма-де-Майорка", 39.5696, 2.6502, "Europe/Madrid"],
+ ["סביליה", "Seville Sevilla Севилья", 37.3891, -5.9845, "Europe/Madrid"],
+ ["אליקנטה", "Alicante Аликанте", 38.3452, -0.481, "Europe/Madrid"],
+ ["טורמולינוס", "Torremolinos Торремолинос", 36.62, -4.5, "Europe/Madrid"],
+ ["אלגרבה – פארו", "Algarve Faro Фару", 37.0194, -7.9322, "Europe/Lisbon"],
+ ["מדיירה", "Madeira Funchal Мадейра", 32.6669, -16.9241, "Atlantic/Madeira"],
+ ["קשקאיש", "Cascais Кашкайш", 38.6979, -9.4215, "Europe/Lisbon"],
+ ["מיקונוס", "Mykonos Миконос", 37.4467, 25.3289, "Europe/Athens"],
+ ["סנטוריני", "Santorini Санторини", 36.3932, 25.4615, "Europe/Athens"],
+ ["קורפו", "Corfu Корфу", 39.6243, 19.9217, "Europe/Athens"],
+ ["איה נאפה", "Ayia Napa Cyprus Айя-Напа", 34.989, 34.0, "Asia/Nicosia"],
+ ["פאפוס", "Paphos Cyprus Пафос", 34.7754, 32.4245, "Asia/Nicosia"],
+ ["ספליט", "Split Croatia Сплит", 43.5081, 16.4402, "Europe/Zagreb"],
+ ["ורוצלב", "Wroclaw Вроцлав", 51.1079, 17.0385, "Europe/Warsaw"],
+ ["גדנסק", "Gdansk Гданьск", 54.352, 18.6466, "Europe/Warsaw"],
+ ["לובלין", "Lublin Люблин", 51.2465, 22.5684, "Europe/Warsaw"],
+ ["לז׳ענסק", "Lezajsk Лежайск", 50.2624, 22.4192, "Europe/Warsaw"],
+ ["יאשי", "Iasi Romania Яссы", 47.1585, 27.6014, "Europe/Bucharest"],
+ ["טימישוארה", "Timisoara Тимишоара", 45.7489, 21.2087, "Europe/Bucharest"],
+ ["אורדאה", "Oradea Орадя", 47.0465, 21.9189, "Europe/Bucharest"],
+ ["בראשוב", "Brasov Брашов", 45.6427, 25.5887, "Europe/Bucharest"],
+ ["פלובדיב", "Plovdiv Пловдив", 42.1354, 24.7453, "Europe/Sofia"],
+ ["סגד", "Szeged Сегед", 46.253, 20.1414, "Europe/Budapest"],
+ ["קריבוי רוג", "Kryvyi Rih Krivoy Rog Кривой Рог", 47.9105, 33.3918, "Europe/Kiev"],
+ ["ניקולאייב", "Mykolaiv Nikolaev Николаев", 46.975, 31.9946, "Europe/Kiev"],
+ ["חרסון", "Kherson Херсон", 46.6354, 32.6169, "Europe/Kiev"],
+ ["פולטבה", "Poltava Полтава", 49.5883, 34.5514, "Europe/Kiev"],
+ ["ויניצה", "Vinnytsia Винница", 49.2331, 28.4682, "Europe/Kiev"],
+ ["רובנה", "Rivne Rovno Ровно", 50.6199, 26.2516, "Europe/Kiev"],
+ ["לוצק", "Lutsk Луцк", 50.7472, 25.3254, "Europe/Kiev"],
+ ["טרנופול", "Ternopil Тернополь", 49.5535, 25.5948, "Europe/Kiev"],
+ ["אוז׳הורוד", "Uzhhorod Ужгород", 48.6208, 22.2879, "Europe/Kiev"],
+ ["איבנו פרנקיבסק", "Ivano-Frankivsk Ивано-Франковск", 48.9226, 24.7111, "Europe/Kiev"],
+ ["ביילה צרקוב", "Bila Tserkva Белая Церковь", 49.7968, 30.1311, "Europe/Kiev"],
+ ["צ׳רקסי", "Cherkasy Черкассы", 49.4444, 32.0598, "Europe/Kiev"],
+ ["צ׳רניגוב", "Chernihiv Чернигов", 51.4982, 31.2893, "Europe/Kiev"],
+ ["סומי", "Sumy Сумы", 50.9077, 34.7981, "Europe/Kiev"],
+ ["קרמנצ׳וג", "Kremenchuk Кременчуг", 49.0659, 33.4204, "Europe/Kiev"],
+ ["קמניץ פודולסק", "Kamianets-Podilskyi Каменец-Подольский", 48.6845, 26.5856, "Europe/Kiev"],
+ ["מריופול", "Mariupol Мариуполь", 47.0971, 37.5434, "Europe/Kiev"],
+ ["דונייצק", "Donetsk Донецк", 48.0159, 37.8029, "Europe/Moscow"],
+ ["לוגנסק", "Luhansk Lugansk Луганск", 48.574, 39.3078, "Europe/Moscow"],
+ ["קרופיבניצקי", "Kropyvnytskyi Kirovograd Кропивницкий", 48.5079, 32.2623, "Europe/Kiev"],
+ ["האדיטש (ציון אדה״ז)", "Hadiach Haditch Гадяч", 50.3713, 34.0061, "Europe/Kiev"],
+ ["אניפולי", "Hannopil Anipoli Ганнополь", 50.238, 27.106, "Europe/Kiev"],
+ ["פולנאה", "Polonne Полонное", 50.1167, 27.5167, "Europe/Kiev"],
+ ["מז׳יבוז׳", "Medzhybizh Меджибож", 49.439, 27.418, "Europe/Kiev"],
+ ["ברסלב", "Bratslav Breslov Брацлав", 48.8235, 28.9439, "Europe/Kiev"],
+ ["חמלניצקי", "Khmelnytskyi Хмельницкий", 49.4229, 26.9871, "Europe/Kiev"],
+ ["ברסט", "Brest Belarus Брест", 52.0976, 23.7341, "Europe/Minsk"],
+ ["גרודנו", "Grodno Hrodna Гродно", 53.6694, 23.8131, "Europe/Minsk"],
+ ["מוגילב", "Mogilev Могилёв", 53.9007, 30.3314, "Europe/Minsk"],
+ ["בוברויסק", "Bobruisk Бобруйск", 53.1384, 29.2214, "Europe/Minsk"],
+ ["ניעז׳ין", "Nizhyn Nezhin Нежин", 51.048, 31.8869, "Europe/Kiev"],
+ ["קוסטנאי", "Kostanay Костанай", 53.2144, 63.6246, "Asia/Qostanay"],
+ ["פבלודר", "Pavlodar Павлодар", 52.2873, 76.9674, "Asia/Almaty"],
+ ["אוסט קמנוגורסק", "Oskemen Ust-Kamenogorsk Усть-Каменогорск", 49.9483, 82.6275, "Asia/Almaty"],
+ ["קובה – קרסנאיה סלובודה", "Quba Krasnaya Sloboda Красная Слобода", 41.3611, 48.5126, "Asia/Baku"],
+ ["גומרי", "Gyumri Armenia Гюмри", 40.7894, 43.8475, "Asia/Yerevan"],
+ ["שחריסבז", "Shahrisabz Шахрисабз", 39.0578, 66.8342, "Asia/Samarkand"],
+ ["קוקנד", "Kokand Коканд", 40.5286, 70.9425, "Asia/Tashkent"],
+ ["ח׳ודז׳נד", "Khujand Худжанд", 40.2829, 69.6222, "Asia/Dushanbe"],
+ ["מנאלי העתיקה / ואשישט", "Old Manali Vashisht Старый Манали", 32.258, 77.189, "Asia/Kolkata"],
+ ["קסול", "Kasol India Касол", 32.01, 77.315, "Asia/Kolkata"],
+ ["דהרמקוט", "Dharamkot India Дхармкот", 32.249, 76.324, "Asia/Kolkata"],
+ ["רישיקש", "Rishikesh India Ришикеш", 30.0869, 78.2676, "Asia/Kolkata"],
+ ["המפי", "Hampi India Хампи", 15.335, 76.46, "Asia/Kolkata"],
+ ["ארמבול (גואה)", "Arambol Goa Арамбол", 15.687, 73.704, "Asia/Kolkata"],
+ ["קוצ׳ין", "Kochi Cochin India Кочин", 9.9312, 76.2673, "Asia/Kolkata"],
+ ["ג׳איפור", "Jaipur India Джайпур", 26.9124, 75.7873, "Asia/Kolkata"],
+ ["לה (לדאק)", "Leh Ladakh Лех", 34.1526, 77.5771, "Asia/Kolkata"],
+ ["לוקלה / נמצ׳ה (אוורסט)", "Namche Bazaar Everest Намче-Базар", 27.805, 86.714, "Asia/Kathmandu"],
+ ["קו טאו", "Koh Tao Thailand Ко Тао", 10.0956, 99.8404, "Asia/Bangkok"],
+ ["קראבי", "Krabi Thailand Краби", 8.0863, 98.9063, "Asia/Bangkok"],
+ ["פאי", "Pai Thailand Пай", 19.3583, 98.4401, "Asia/Bangkok"],
+ ["לואנג פרבנג", "Luang Prabang Laos Луангпхабанг", 19.8856, 102.1347, "Asia/Vientiane"],
+ ["סיאם ריפ", "Siem Reap Cambodia Сиемреап", 13.3671, 103.8448, "Asia/Phnom_Penh"],
+ ["הוי אן", "Hoi An Vietnam Хойан", 15.8801, 108.338, "Asia/Ho_Chi_Minh"],
+ ["פודונג (שנגחאי)", "Pudong Shanghai Пудун", 31.2215, 121.5447, "Asia/Shanghai"],
+ ["ייוו", "Yiwu China Иу", 29.3069, 120.0751, "Asia/Shanghai"],
+ ["דונגגואן (סין)", "Dongguan China Дунгуань", 23.0207, 113.7518, "Asia/Shanghai"],
+ ["נינגבו", "Ningbo China Нинбо", 29.8683, 121.544, "Asia/Shanghai"],
+ ["טיאנג׳ין", "Tianjin China Тяньцзинь", 39.3434, 117.3616, "Asia/Shanghai"],
+ ["קובה (יפן)", "Kobe Japan Кобе", 34.6901, 135.1955, "Asia/Tokyo"],
+ ["ניסקו (יפן)", "Niseko Japan Нисеко", 42.8048, 140.6874, "Asia/Tokyo"],
+ ["ג׳ג׳ו (קוריאה)", "Jeju Korea Чеджу", 33.4996, 126.5312, "Asia/Seoul"],
+ ["לנגקאווי", "Langkawi Malaysia Лангкави", 6.35, 99.8, "Asia/Kuala_Lumpur"],
+ ["אולוואטו – באלי", "Uluwatu Canggu Bali Чангу", -8.6478, 115.1385, "Asia/Makassar"],
+ ["סיארגאו (פיליפינים)", "Siargao Philippines Сиаргао", 9.8482, 126.0458, "Asia/Manila"],
+ ["בורג׳ומי (גאורגיה)", "Borjomi Georgia Боржоми", 41.838, 43.383, "Asia/Tbilisi"],
+ ["אל ח׳ובר (סעודיה)", "Al Khobar Saudi Эль-Хубар", 26.2172, 50.1971, "Asia/Riyadh"],
+ ["שרג׳ה", "Sharjah UAE Шарджа", 25.3463, 55.4209, "Asia/Dubai"],
+ ["רס אל ח׳ימה", "Ras Al Khaimah UAE Рас-эль-Хайма", 25.8007, 55.9762, "Asia/Dubai"],
+ ["דורבן", "Durban South Africa Дурбан", -29.8587, 31.0218, "Africa/Johannesburg"],
+ ["פורט אליזבת׳", "Gqeberha Port Elizabeth Порт-Элизабет", -33.9608, 25.6022, "Africa/Johannesburg"],
+ ["פרטוריה", "Pretoria Претория", -25.7479, 28.2293, "Africa/Johannesburg"],
+ ["קינשאסה (קונגו)", "Kinshasa Congo Киншаса", -4.4419, 15.2663, "Africa/Kinshasa"],
+ ["לובומבאשי (קונגו)", "Lubumbashi Congo Лубумбаши", -11.6609, 27.4794, "Africa/Lubumbashi"],
+ ["אקרה (גאנה)", "Accra Ghana Аккра", 5.6037, -0.187, "Africa/Accra"],
+ ["לאגוס (ניגריה)", "Lagos Nigeria Лагос", 6.5244, 3.3792, "Africa/Lagos"],
+ ["אבוג׳ה (ניגריה)", "Abuja Nigeria Абуджа", 9.0765, 7.3986, "Africa/Lagos"],
+ ["דקאר (סנגל)", "Dakar Senegal Дакар", 14.7167, -17.4677, "Africa/Dakar"],
+ ["אביג׳אן (חוף השנהב)", "Abidjan Ivory Coast Абиджан", 5.36, -4.0083, "Africa/Abidjan"],
+ ["לואנדה (אנגולה)", "Luanda Angola Луанда", -8.839, 13.2894, "Africa/Luanda"],
+ ["אדיס אבבה (אתיופיה)", "Addis Ababa Ethiopia Аддис-Абеба", 9.03, 38.74, "Africa/Addis_Ababa"],
+ ["קמפלה (אוגנדה)", "Kampala Uganda Кампала", 0.3476, 32.5825, "Africa/Kampala"],
+ ["ארושה (טנזניה)", "Arusha Tanzania Аруша", -3.3869, 36.683, "Africa/Dar_es_Salaam"],
+ ["דאר א-סלאם", "Dar es Salaam Tanzania Дар-эс-Салам", -6.7924, 39.2083, "Africa/Dar_es_Salaam"],
+ ["קיגאלי (רואנדה)", "Kigali Rwanda Кигали", -1.9441, 30.0619, "Africa/Kigali"],
+ ["לוסקה (זמביה)", "Lusaka Zambia Лусака", -15.3875, 28.3228, "Africa/Lusaka"],
+ ["הרארה (זימבבואה)", "Harare Zimbabwe Хараре", -17.8252, 31.0335, "Africa/Harare"],
+ ["ויקטוריה פולס", "Victoria Falls Виктория-Фолс", -17.9243, 25.8572, "Africa/Harare"],
+ ["גבורונה (בוטסואנה)", "Gaborone Botswana Габороне", -24.6282, 25.9231, "Africa/Gaborone"],
+ ["וינדהוק (נמיביה)", "Windhoek Namibia Виндхук", -22.5609, 17.0658, "Africa/Windhoek"],
+ ["מאפוטו (מוזמביק)", "Maputo Mozambique Мапуту", -25.9692, 32.5732, "Africa/Maputo"],
+ ["אנטננריבו (מדגסקר)", "Antananarivo Madagascar Антананариву", -18.8792, 47.5079, "Indian/Antananarivo"],
+ ["תוניס", "Tunis Tunisia Тунис", 36.8065, 10.1815, "Africa/Tunis"],
+ ["ג׳רבה (תוניסיה)", "Djerba Tunisia Джерба", 33.8076, 10.8451, "Africa/Tunis"],
+ ["רבאט (מרוקו)", "Rabat Morocco Рабат", 34.0209, -6.8416, "Africa/Casablanca"],
+ ["פאס (מרוקו)", "Fez Morocco Фес", 34.0181, -5.0078, "Africa/Casablanca"],
+ ["אגדיר (מרוקו)", "Agadir Morocco Агадир", 30.4278, -9.5981, "Africa/Casablanca"],
+ ["אלכסנדריה (מצרים)", "Alexandria Egypt Александрия", 31.2001, 29.9187, "Africa/Cairo"],
+ ["דהב (סיני)", "Dahab Sinai Дахаб", 28.5091, 34.5136, "Africa/Cairo"],
+ ["מנדוסה (ארגנטינה)", "Mendoza Argentina Мендоса", -32.8895, -68.8458, "America/Argentina/Mendoza"],
+ ["רוסאריו (ארגנטינה)", "Rosario Argentina Росарио", -32.9442, -60.6505, "America/Argentina/Buenos_Aires"],
+ ["אל קלפטה (ארגנטינה)", "El Calafate Argentina Эль-Калафате", -50.3379, -72.2648, "America/Argentina/Rio_Gallegos"],
+ ["פוקון (צ׳ילה)", "Pucon Chile Пукон", -39.282, -71.954, "America/Santiago"],
+ ["פוארטו נטאלס (צ׳ילה)", "Puerto Natales Torres del Paine Пуэрто-Наталес", -51.7236, -72.4875, "America/Punta_Arenas"],
+ ["סן פדרו דה אטקמה", "San Pedro de Atacama Сан-Педро-де-Атакама", -22.9087, -68.1997, "America/Santiago"],
+ ["אויוני (בוליביה)", "Uyuni Bolivia Уюни", -20.46, -66.825, "America/La_Paz"],
+ ["ארקיפה (פרו)", "Arequipa Peru Арекипа", -16.409, -71.5375, "America/Lima"],
+ ["וואקצ׳ינה / איקה (פרו)", "Huacachina Ica Peru Уакачина", -14.0875, -75.7633, "America/Lima"],
+ ["פלוריאנופוליס (ברזיל)", "Florianopolis Brazil Флорианополис", -27.5954, -48.548, "America/Sao_Paulo"],
+ ["בלו הוריזונטה (ברזיל)", "Belo Horizonte Brazil Белу-Оризонти", -19.9167, -43.9345, "America/Sao_Paulo"],
+ ["קוריטיבה (ברזיל)", "Curitiba Brazil Куритиба", -25.4284, -49.2733, "America/Sao_Paulo"],
+ ["פוז דו איגואסו", "Foz do Iguacu Iguazu Фос-ду-Игуасу", -25.5469, -54.5882, "America/Sao_Paulo"],
+ ["בלם (ברזיל)", "Belem Brazil Белен", -1.4558, -48.4902, "America/Belem"],
+ ["קאלי (קולומביה)", "Cali Colombia Кали", 3.4516, -76.532, "America/Bogota"],
+ ["ברנקייה (קולומביה)", "Barranquilla Colombia Барранкилья", 10.9685, -74.7813, "America/Bogota"],
+ ["בנוס (אקוודור)", "Banos Ecuador Баньос", -1.3964, -78.4247, "America/Guayaquil"],
+ ["אנטיגואה (גואטמלה)", "Antigua Guatemala Антигуа Гватемала", 14.5586, -90.7295, "America/Guatemala"],
+ ["טולום (מקסיקו)", "Tulum Mexico Тулум", 20.2114, -87.4654, "America/Cancun"],
+ ["אואחאקה (מקסיקו)", "Oaxaca Mexico Оахака", 17.0732, -96.7266, "America/Mexico_City"],
+ ["פוארטו ויאחרטה", "Puerto Vallarta Mexico Пуэрто-Вальярта", 20.6534, -105.2253, "America/Mexico_City"],
+ ["לוס קאבוס", "Los Cabos Cabo San Lucas Лос-Кабос", 22.8905, -109.9167, "America/Mazatlan"],
+ ["סן מיגל דה איינדה", "San Miguel de Allende Сан-Мигель-де-Альенде", 20.9144, -100.7452, "America/Mexico_City"],
+ ["ז׳אקו (קוסטה ריקה)", "Jaco Costa Rica Хако", 9.615, -84.629, "America/Costa_Rica"],
+ ["מונטניטה (אקוודור)", "Montanita Ecuador Монтаньита", -1.829, -80.753, "America/Guayaquil"],
+ ["איי ורג׳ין – סנט תומס", "St Thomas Virgin Islands Сент-Томас", 18.3381, -64.8941, "America/St_Thomas"],
+ ["ברמודה", "Bermuda Бермуды", 32.2949, -64.7814, "Atlantic/Bermuda"],
+ ["קיימן", "Cayman Islands Каймановы острова", 19.2869, -81.3674, "America/Cayman"],
+ ["בונדיי (סידני)", "Bondi Sydney Бонди", -33.8915, 151.2767, "Australia/Sydney"],
+ ["סנט קילדה (מלבורן)", "St Kilda Melbourne Сент-Килда", -37.8676, 144.9809, "Australia/Melbourne"],
+ ["נורת׳ שור (סידני)", "North Shore Sydney Норт-Шор", -33.7969, 151.18, "Australia/Sydney"]
+].map(c=>({name:c[0],alt:c[1],lat:c[2],lon:c[3],tz:c[4],candle:c[5]||18}));
+
+// ---------- Solar math (NOAA) ----------
+const R=Math.PI/180, D=180/Math.PI;
+function sunAt(ms){
+  const T=(ms/86400000+2440587.5-2451545)/36525;
+  const L0=((280.46646+T*(36000.76983+0.0003032*T))%360+360)%360;
+  const M=357.52911+T*(35999.05029-0.0001537*T);
+  const e=0.016708634-T*(0.000042037+0.0000001267*T);
+  const C=Math.sin(M*R)*(1.914602-T*(0.004817+0.000014*T))+Math.sin(2*M*R)*(0.019993-0.000101*T)+Math.sin(3*M*R)*0.000289;
+  const om=125.04-1934.136*T;
+  const lam=L0+C-0.00569-0.00478*Math.sin(om*R);
+  const eps0=23+(26+(21.448-T*(46.815+T*(0.00059-T*0.001813)))/60)/60;
+  const eps=eps0+0.00256*Math.cos(om*R);
+  const dec=Math.asin(Math.sin(eps*R)*Math.sin(lam*R));
+  const y=Math.pow(Math.tan(eps*R/2),2);
+  const eq=4*D*(y*Math.sin(2*L0*R)-2*e*Math.sin(M*R)+4*e*y*Math.sin(M*R)*Math.cos(2*L0*R)-0.5*y*y*Math.sin(4*L0*R)-1.25*e*e*Math.sin(2*M*R));
+  return {dec,eq};
+}
+// time (ms UTC) when sun center is `depr` degrees below horizon, on civil date y-m-d at the location
+function sunEvent(Y,Mo,Dd,lat,lon,depr,rising){
+  const base=Date.UTC(Y,Mo-1,Dd);
+  let mins=720-4*lon, ok=true;
+  for(let i=0;i<4;i++){
+    const s=sunAt(base+mins*60000);
+    const cosH=(Math.sin(-depr*R)-Math.sin(lat*R)*Math.sin(s.dec))/(Math.cos(lat*R)*Math.cos(s.dec));
+    if(cosH<-1||cosH>1){ok=false;break;}
+    const H=Math.acos(cosH)*D;
+    mins=720-4*lon-s.eq+(rising?-4*H:4*H);
+  }
+  return ok?base+mins*60000:null;
+}
+function addDays(o,n){const d=new Date(Date.UTC(o.y,o.m-1,o.d+n));return {y:d.getUTCFullYear(),m:d.getUTCMonth()+1,d:d.getUTCDate()};}
+function dow(o){return new Date(Date.UTC(o.y,o.m-1,o.d)).getUTCDay();}
+
+function zmanim(loc,day){
+  const ev=(dd,deg,r)=>sunEvent(dd.y,dd.m,dd.d,loc.lat,loc.lon,deg,r);
+  const netzA=ev(day,1.583,true), shkiaA=ev(day,1.583,false);
+  const out={};
+  if(netzA==null||shkiaA==null) return null;
+  const sh=(shkiaA-netzA)/12;
+  const prev=addDays(day,-1), nxt=addDays(day,1);
+  const prevShkiaA=ev(prev,1.583,false), nextNetzA=ev(nxt,1.583,true);
+  out.chatzotLaylaPrev = (prevShkiaA!=null)? (prevShkiaA+netzA)/2 : null;
+  let alot=ev(day,16.9,true); out.alotFallback=false;
+  if(alot==null){alot=out.chatzotLaylaPrev; out.alotFallback=true;}
+  out.alot=alot;
+  out.misheyakir=ev(day,10.2,true);
+  out.netz=ev(day,0.833,true);
+  out.shema=netzA+3*sh;
+  out.tefila=netzA+4*sh;
+  out.chatzot=(netzA+shkiaA)/2;
+  out.minchaG=netzA+6.5*sh;
+  out.minchaK=shkiaA-2.5*sh;
+  out.plag=shkiaA-1.25*sh;
+  out.shkia=ev(day,0.833,false);
+  out.tzeit=ev(day,6,false);
+  out.shabEnd=ev(day,8.5,false);
+  out.chatzotLayla=(nextNetzA!=null)?(shkiaA+nextNetzA)/2:null;
+  out.shaah=sh;
+  return out;
+}
+
+// ---------- Formatting ----------
+const fmtCache={};
+function tf(tz){return fmtCache[tz]||(fmtCache[tz]=new Intl.DateTimeFormat("en-GB",{timeZone:tz,hour:"2-digit",minute:"2-digit",hourCycle:"h23"}));}
+function hm(ms,tz){if(ms==null)return "—";return tf(tz).format(new Date(Math.round(ms/60000)*60000));}
+function todayIn(tz){
+  const p=new Intl.DateTimeFormat("en-CA",{timeZone:tz,year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());
+  const g=t=>+p.find(x=>x.type===t).value;return {y:g("year"),m:g("month"),d:g("day")};
+}
+const DAYS=["ראשון","שני","שלישי","רביעי","חמישי","שישי","שבת קודש"];
+const GMONTHS=["ינואר","פברואר","מרץ","אפריל","מאי","יוני","יולי","אוגוסט","ספטמבר","אוקטובר","נובמבר","דצמבר"];
+const HMONTH={Tishri:"תשרי",Heshvan:"מרחשון",Kislev:"כסלו",Tevet:"טבת",Shevat:"שבט","Adar I":"אדר א׳","Adar II":"אדר ב׳",Adar:"אדר",Nisan:"ניסן",Iyar:"אייר",Sivan:"סיון",Tamuz:"תמוז",Av:"מנחם אב",Elul:"אלול"};
+function gem(n){
+  const L=[[400,"ת"],[300,"ש"],[200,"ר"],[100,"ק"],[90,"צ"],[80,"פ"],[70,"ע"],[60,"ס"],[50,"נ"],[40,"מ"],[30,"ל"],[20,"כ"],[10,"י"],[9,"ט"],[8,"ח"],[7,"ז"],[6,"ו"],[5,"ה"],[4,"ד"],[3,"ג"],[2,"ב"],[1,"א"]];
+  let s="";n=n%1000;
+  while(n>0){ if(n===15){s+="טו";break;} if(n===16){s+="טז";break;}
+    for(const [v,c] of L){ if(n>=v){s+=c;n-=v;break;} } }
+  return s.length>1? s.slice(0,-1)+"״"+s.slice(-1) : s+"׳";
+}
+let hebFmt=null;
+function hebDate(o){
+  try{
+    hebFmt=hebFmt||new Intl.DateTimeFormat("en-u-ca-hebrew",{timeZone:"UTC",day:"numeric",month:"long",year:"numeric"});
+    const p=hebFmt.formatToParts(new Date(Date.UTC(o.y,o.m-1,o.d,12)));
+    const g=t=>(p.find(x=>x.type===t)||{}).value;
+    const mon=HMONTH[g("month")]||g("month");
+    return gem(+g("day"))+" "+mon+" "+gem(+(g("year")||g("relatedYear")));
+  }catch(e){return "";}
+}
+
+// ---------- State ----------
+const store={get(k){try{return JSON.parse(localStorage.getItem(k));}catch(e){return null;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}};
+const deviceTz=(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone;}catch(e){return "UTC";}})();
+let loc=store.get("zmanim.loc");
+let tzSwitch=null;
+if(!loc||typeof loc.lat!=="number"){ loc=CITIES.find(c=>c.tz===deviceTz)||CITIES[0]; store.set("zmanim.devtz",deviceTz); }
+else {
+  // מעבר אוטומטי כשאזור הזמן של המכשיר השתנה (למשל אחרי טיסה)
+  const lastTz=store.get("zmanim.devtz");
+  if(lastTz && lastTz!==deviceTz && loc.tz!==deviceTz){
+    const c=CITIES.find(x=>x.tz===deviceTz);
+    tzSwitch={from:loc,to:c||null};
+    if(c){ loc=c; store.set("zmanim.loc",c); }
+  }
+  store.set("zmanim.devtz",deviceTz);
+}
+// מיקום שמגיע מהטלפון בקישור: ‎#g<lat>_<lon>
+function nearestCity(lat,lon){ let best=null,bd=1e9; for(const c of CITIES){ const dy=c.lat-lat, dx=(c.lon-lon)*Math.cos(lat*Math.PI/180), dd=dx*dx+dy*dy; if(dd<bd){bd=dd;best=c;} } return {c:best,km:Math.sqrt(bd)*111}; }
+function locFromHash(){
+  const m=(location.hash||"").match(/^#g(-?\d{1,2}(?:\.\d+)?)_(-?\d{1,3}(?:\.\d+)?)$/);
+  if(!m) return null;
+  const lat=+m[1], lon=+m[2]; if(Math.abs(lat)>90||Math.abs(lon)>180) return null;
+  const n=nearestCity(lat,lon), close=n.c&&n.km<25;
+  return {name: close? n.c.name : (n.c? `המיקום שלי (ליד ${n.c.name})` : "המיקום שלי"), alt:"", lat, lon, tz:deviceTz, candle:(close&&n.c.candle)||18, gps:true};
+}
+{ const h=locFromHash(); if(h){ loc=h; tzSwitch=null; store.set("zmanim.loc",h); store.set("zmanim.devtz",deviceTz); } }
+let day=todayIn(loc.tz);
+
+const $=id=>document.getElementById(id);
+const ROWS=[
+ ["alot","עלות השחר","תחילת היום; התחלת תענית"],
+ ["misheyakir","משיכיר","זמן טלית ותפילין"],
+ ["netz","הנץ החמה","זמן תפילת עמידה לכתחילה"],
+ ["shema","סוף זמן קריאת שמע",""],
+ ["tefila","סוף זמן תפילה",""],
+ ["chatzot","חצות היום",""],
+ ["minchaG","מנחה גדולה",""],
+ ["minchaK","מנחה קטנה",""],
+ ["plag","פלג המנחה",""],
+ ["candle","הדלקת נרות שבת",""],
+ ["shkia","שקיעת החמה",""],
+ ["tzeit","צאת הכוכבים","ק״ש של ערבית, סוף תענית"],
+ ["shabEnd","צאת השבת",""],
+ ["chatzotLayla","חצות הלילה",""]
+];
+
+function render(){
+  const tz=loc.tz, z=zmanim(loc,day), wd=dow(day);
+  $("cityName").textContent=loc.name;
+  const isToday=JSON.stringify(day)===JSON.stringify(todayIn(tz));
+  const now=Date.now();
+  let night="";
+  if(isToday&&z&&z.shkia&&now>z.shkia) night=` · מהשקיעה: אור ל${hebDate(addDays(day,1))}`;
+  $("dates").innerHTML=`<b>יום ${DAYS[wd]}${isToday?" (היום)":""}</b><br>${hebDate(day)} · <span class="num">${day.d}</span> ב${GMONTHS[day.m-1]} <span class="num">${day.y}</span>${night}`;
+  $("datePick").value=`${day.y}-${String(day.m).padStart(2,"0")}-${String(day.d).padStart(2,"0")}`;
+
+  const list=$("list"); list.innerHTML="";
+  if(!z){ list.innerHTML='<div class="row"><span class="n">בתאריך זה החמה אינה זורחת או אינה שוקעת במקום זה. יש לשאול רב.</span></div>'; $("nextCard").hidden=true; renderShabbat(); return; }
+  const vals=Object.assign({},z);
+  vals.candle = wd===5 && z.shkia ? z.shkia-(loc.candle||18)*60000 : null;
+  if(wd!==6) vals.shabEnd=null;
+  const items=[];
+  for(const [k,n,d] of ROWS){
+    if((k==="candle"&&vals.candle==null)||(k==="shabEnd"&&wd!==6)) continue;
+    let desc=d;
+    if(k==="alot"&&z.alotFallback) desc="השמש אינה יורדת 16.9° בעונה זו; עלות השחר בחצות הלילה";
+    if(k==="candle") desc=`${loc.candle||18} דקות לפני השקיעה`;
+    if(k==="shabEnd"&&vals.shabEnd==null) desc="השמש אינה יורדת 8.5° בעונה זו; יש לשאול רב";
+    if(k==="shema"||k==="tefila") desc=desc||`שעה זמנית: ${Math.round(z.shaah/60000)} דקות`;
+    items.push({k,n,desc,t:vals[k]});
+  }
+  let nextIdx=-1;
+  if(isToday) nextIdx=items.findIndex(it=>it.t!=null&&it.t>now);
+  items.forEach((it,i)=>{
+    const el=document.createElement("div");
+    el.className="row"+(isToday&&it.t!=null&&it.t<=now?" past":"")+(i===nextIdx?" cur":"")+((it.k==="candle"||it.k==="shabEnd")?" shab":"");
+    el.innerHTML=`<span class="n"></span><span class="t num"></span>${it.desc?'<span class="d"></span>':""}`;
+    el.querySelector(".n").textContent=it.n;
+    el.querySelector(".t").textContent=hm(it.t,tz);
+    if(it.desc) el.querySelector(".d").textContent=it.desc;
+    list.appendChild(el);
+  });
+
+  // next card
+  if(isToday&&nextIdx>=0){
+    const it=items[nextIdx]; const left=Math.max(0,Math.round((it.t-now)/60000));
+    $("nextName").textContent=it.n; $("nextTime").textContent=hm(it.t,tz);
+    $("nextLeft").textContent= left>=60? `בעוד ${Math.floor(left/60)} שע׳ ו־${left%60} דק׳` : `בעוד ${left} דקות`;
+    $("nextCard").hidden=false;
+  } else $("nextCard").hidden=true;
+
+  // arc: from previous-night chatzot to this night's chatzot
+  const a=z.chatzotLaylaPrev, b=z.chatzotLayla, mk=$("nowMark");
+  if(isToday&&a&&b&&now>=a&&now<=b){ mk.style.right=((now-a)/(b-a)*100)+"%"; mk.hidden=false; } else mk.hidden=true;
+  renderShabbat();
+  loadLib(); renderLuach();
+}
+
+function renderShabbat(){
+  const wd=dow(day);
+  const fri = wd===6? addDays(day,-1) : addDays(day,(5-wd+7)%7);
+  const sat = addDays(fri,1);
+  const shk=sunEvent(fri.y,fri.m,fri.d,loc.lat,loc.lon,0.833,false);
+  const end=sunEvent(sat.y,sat.m,sat.d,loc.lat,loc.lon,8.5,false);
+  const candle= shk!=null? shk-(loc.candle||18)*60000 : null;
+  const box=$("shabbat");
+  box.innerHTML=`<h2></h2><div><div class="k">הדלקת נרות · שישי</div><div class="v num"></div></div><div><div class="k">צאת השבת · מוצ״ש</div><div class="v num"></div></div>`;
+  box.querySelector("h2").textContent=`שבת קודש · ${hebDate(sat)}`;
+  const v=box.querySelectorAll(".v");
+  v[0].textContent=hm(candle,loc.tz); v[1].textContent=hm(end,loc.tz);
+}
+
+// ---------- לוח: ימים מיוחדים, שיעורים, תפילה ומנהגים ----------
+// חודשים לפי מספור hebcal: ניסן=1 ... אלול=6, תשרי=7 ... שבט=11, אדר (א׳)=12, אדר ב׳=13
+const SA="שולחן ערוך אדמו״ר הזקן", SM="ספר המנהגים – חב״ד";
+const CHABAD_DAYS={
+ // תשרי
+ "7-1":[{t:"ראש השנה",x:"נוהגים למעט בשינה ובשיחה בטלה ולומר תהילים בכל עת פנויה. תשליך ביום הראשון אחר מנחה; כשחל בשבת – ביום השני.",s:SM+", מנהגי ראש השנה"}],
+ "7-6":[{t:"יום ההילולא של הרבנית חנה",x:"אמו של הרבי, נסתלקה ו׳ תשרי תשכ״ה. נוהגים ללמוד ולתת צדקה לעילוי נשמתה.",s:"תולדות הרבנית חנה"}],
+ "7-9":[{t:"ערב יום הכיפורים",x:"כפרות בהשכמה; בקשת ״לעקאח״ (עוגת דבש); מצווה לאכול ולשתות; ברכת הבנים לפני הליכה לבית הכנסת.",s:SM+", מנהגי ערב יום הכיפורים; "+SA+" סי׳ תרד–תרז"}],
+ "7-13":[{t:"יום ההילולא של אדמו״ר מהר״ש",x:"נסתלק י״ג תשרי תרמ״ג. ממרגלא בפומיה: ״לכתחילה אריבער״ – לעלות מלכתחילה מעל המניעות.",s:"ספר התולדות – אדמו״ר מהר״ש"}],
+ "7-15":[{t:"סוכות",x:"מנהג חב״ד שלא לאכול ולשתות אפילו מים מחוץ לסוכה, וכן שאין ישנים בסוכה. נענועים לפי סדר האריז״ל. התוועדויות שמחת בית השואבה בכל לילה.",s:SM+", מנהגי חג הסוכות"}],
+ "7-21":[{t:"הושענא רבה",x:"בליל הושענא רבה קוראים ספר דברים, ואחר חצות אומרים את כל ספר התהילים. חובטים ערבה אחר ההושענות.",s:SM+", הושענא רבה"}],
+ "7-22":[{t:"שמיני עצרת",x:"בחב״ד עורכים הקפות גם בליל שמיני עצרת. במוסף מתחילים ״משיב הרוח ומוריד הגשם״.",s:SM+", שמיני עצרת ושמחת תורה; "+SA+" סי׳ קיד"}],
+ // מרחשון
+ "8-20":[{t:"יום הולדת אדמו״ר הרש״ב",x:"נולד כ׳ מרחשון תרכ״א. נוהגים להתוועד ולהוסיף בלימוד החסידות.",s:"ספר התולדות – אדמו״ר הרש״ב"}],
+ // כסלו
+ "9-9":[{t:"יום הולדת והילולא של אדמו״ר האמצעי",x:"נולד ונסתלק בט׳ כסלו (תקל״ד–תקפ״ח).",s:"ספר התולדות – אדמו״ר האמצעי"}],
+ "9-10":[{t:"חג הגאולה של אדמו״ר האמצעי",x:"שוחרר ממאסרו בי׳ כסלו תקפ״ז. נוהגים להתוועד.",s:"ספר התולדות – אדמו״ר האמצעי"}],
+ "9-14":[{t:"יום חתונת הרבי והרבנית",x:"י״ד כסלו תרפ״ט. נוהגים להתוועד.",s:"ימי חב״ד"}],
+ "9-19":[{t:"י״ט כסלו – ראש השנה לחסידות",x:"גאולת אדמו״ר הזקן ממאסרו בפטרבורג, תקנ״ט. אין אומרים תחנון, וכן למחרתו בכ׳ כסלו (וגם לא במנחה של ערב י״ט). מתוועדים, ומחלקים את הש״ס ללימוד בשנה הבאה. מברכים זה את זה ״לשנה טובה בלימוד החסידות ובדרכי החסידות תכתבו ותחתמו״.",s:"אגרת הקודש סי׳ ב (״קטנתי״); "+SM+", כסלו"}],
+ // טבת
+ "10-5":[{t:"ה׳ טבת – דידן נצח",x:"ניצחון במשפט הספרים של ספריית חב״ד, תשמ״ז. הרבי עורר לקנות ספרים חדשים ולהוסיף בלימוד מתוכם.",s:"שיחות ה׳ טבת תשמ״ז"}],
+ "10-24":[{t:"יום ההילולא של אדמו״ר הזקן",x:"נסתלק בכ״ד טבת תקע״ג. נוהגים ללמוד מתורתו – תניא ושולחן ערוך – ולהתוועד.",s:"ספר התולדות – אדמו״ר הזקן"}],
+ // שבט
+ "11-10":[{t:"יו״ד שבט",x:"יום ההילולא של אדמו״ר הריי״צ (תש״י) ויום קבלת הנשיאות של הרבי (תשי״א). נוהגים ללמוד את המאמר ״באתי לגני״ של השנה, לתת צדקה ולהתוועד.",s:"ימי חב״ד; מאמרי ״באתי לגני״"}],
+ "11-15":[{t:"ט״ו בשבט",x:"אין אומרים תחנון. נוהגים לאכול מפירות האילן, ובמיוחד ממיני שבעת המינים.",s:"שולחן ערוך או״ח סי׳ קלא, טז ומג״א שם"}],
+ "11-22":[{t:"יום ההילולא של הרבנית חיה מושקא",x:"רעיית הרבי, נסתלקה כ״ב שבט תשמ״ח. הרבי עורר בעקבותיו לחיזוק ההשתתפות של נשים ובנות בהתוועדויות.",s:"ימי חב״ד"}],
+ // אדר
+ "A-7":[{t:"ז׳ אדר",x:"יום הלידה והפטירה של משה רבנו.",s:"מגילה יג, ב"}],
+ "A-25":[{t:"יום הולדת הרבנית חיה מושקא",x:"נולדה כ״ה אדר תרס״א.",s:"ימי חב״ד"}],
+ // ניסן
+ "1-1":[{t:"ראש חודש ניסן",x:"מא׳ עד י״ג ניסן נוהגים לקרוא אחר התפילה את פרשת הנשיא של היום, ואומרים ״יהי רצון״ שאחריה.",s:"סידור תהלת ה׳; "+SM+", ניסן"}],
+ "1-2":[{t:"יום ההילולא של אדמו״ר הרש״ב",x:"נסתלק ב׳ ניסן תר״פ. נוהגים להתוועד וללמוד מתורתו.",s:"ספר התולדות – אדמו״ר הרש״ב"}],
+ "1-11":[{t:"י״א ניסן – יום הולדת הרבי",x:"נולד י״א ניסן תרס״ב. מנהג חב״ד לומר בכל יום את פרק התהילים המתאים לשנותיו של כל אחד, ורבים אומרים גם את הפרק של הרבי.",s:"ימי חב״ד; "+SM+", מנהגי תהילים"}],
+ "1-13":[{t:"יום ההילולא של אדמו״ר הצמח צדק",x:"נסתלק י״ג ניסן תרכ״ו.",s:"ספר התולדות – הצמח צדק"}],
+ "1-14":[{t:"ערב פסח",x:"תענית בכורות. ביעור חמץ ומכירת חמץ. מנהג חב״ד: מצה שמורה; אין אוכלים מצה שרויה (״גברוכטס״) כל ימי הפסח חוץ מאחרון של פסח.",s:SA+" סי׳ תמג–תמה; "+SM+", מנהגי פסח"}],
+ "1-15":[{t:"פסח",x:"מנהג חב״ד להקפיד על מצה שמורה מהקצירה, ושלא לאכול ״שרויה״ בפסח.",s:SM+", מנהגי פסח"}],
+ // אייר
+ "2-2":[{t:"יום הולדת אדמו״ר מהר״ש",x:"נולד ב׳ אייר תקצ״ד.",s:"ספר התולדות – אדמו״ר מהר״ש"}],
+ "2-14":[{t:"פסח שני",x:"אין אומרים תחנון. נוהגים לאכול מצה. ״אין דבר אבוד – תמיד אפשר לתקן״.",s:SM+", אייר; היום יום, י״ד אייר"}],
+ "2-18":[{t:"ל״ג בעומר",x:"הילולת רשב״י. אין אומרים תחנון. הרבי עורר לערוך תהלוכות ילדים בכל מקום.",s:"ימי חב״ד"}],
+ // סיון
+ "3-6":[{t:"שבועות",x:"נוהגים להיות ערים בליל שבועות ולומר תיקון ליל שבועות. מביאים גם ילדים קטנים לשמוע את עשרת הדברות.",s:SM+", שבועות"}],
+ "3-28":[{t:"כ״ח סיון",x:"יום הצלת הרבי והרבנית והגעתם לארצות הברית, תש״א.",s:"ימי חב״ד"}],
+ // תמוז
+ "4-3":[{t:"ג׳ תמוז",x:"יום ההילולא של הרבי, תשנ״ד. נוהגים להוסיף בתורה ותפילה וצדקה, לכתוב פדיון נפש ולהתוועד.",s:"ימי חב״ד"}],
+ "4-12":[{t:"י״ב–י״ג תמוז – חג הגאולה",x:"שחרורו של אדמו״ר הריי״צ ממאסר, תרפ״ז; י״ב תמוז גם יום הולדתו (תר״מ). אין אומרים תחנון. מתוועדים.",s:SM+", תמוז"}],
+ "4-13":[{t:"י״ג תמוז",x:"המשך חג הגאולה. אין אומרים תחנון.",s:SM+", תמוז"}],
+ // אב
+ "5-15":[{t:"ט״ו באב",x:"אין אומרים תחנון. מהיום מוסיפים בלימוד התורה בלילות, שהלילות מתחילים להתארך.",s:"תענית לא, א; "+SM+", אב"}],
+ "5-20":[{t:"יום ההילולא של ר׳ לוי יצחק",x:"אביו של הרבי, נסתלק בגלות בקזחסטן, כ׳ מנחם אב תש״ד.",s:"ימי חב״ד"}],
+ // אלול
+ "6-15":[{t:"ט״ו אלול",x:"יום ייסוד ישיבת תומכי תמימים בליובאוויטש, תרנ״ז.",s:"ספר התולדות – אדמו״ר הרש״ב"}],
+ "6-18":[{t:"ח״י אלול",x:"יום הולדת הבעל שם טוב (תנ״ח) ואדמו״ר הזקן (תק״ה). ״חי״ אלול נותן חיות בעבודת חודש אלול. מתוועדים.",s:"היום יום, ח״י אלול"}]
+};
+function chabadDays(hd){
+  const m=hd.getMonth(), d=hd.getDate(), leap=Hebcal.HDate.isLeapYear(hd.getFullYear());
+  let key=m+"-"+d;
+  if((m===12&&!leap)||(m===13&&leap)) key="A-"+d;
+  return CHABAD_DAYS[key]||[];
+}
+const strip=s=>String(s||"").replace(/[֑-ֽֿ-ׇ]/g,"");
+const ALIYOT=["ראשון","שני","שלישי","רביעי","חמישי","שישי","שביעי"];
+const NUMW=["","אחד","שני","שלושה","ארבעה","חמישה","שישה","שבעה","שמונה","תשעה","עשרה"];
+function omerText(n){
+  const units=["","אחד","שנים","שלושה","ארבעה","חמישה","שישה","שבעה","שמונה","תשעה"];
+  let days;
+  if(n===1) days="יום אחד"; else if(n===2) days="שני ימים"; else if(n<=10) days=NUMW[n]+" ימים";
+  else if(n<20) days=(n===11?"אחד":n===12?"שנים":units[n-10])+" עשר יום";
+  else { const t=Math.floor(n/10), u=n%10, tens=["","","עשרים","שלושים","ארבעים"][t]; days=(u?units[u]+" ו":"")+tens+" יום"; }
+  const w=Math.floor(n/7), r=n%7;
+  let tail="";
+  if(w){ const ws= w===1?"שבוע אחד":w===2?"שני שבועות":NUMW[w]+" שבועות";
+    const rs= r===0?"": r===1?" ויום אחד": r===2?" ושני ימים": " ו"+NUMW[r]+" ימים";
+    tail=`, שהם ${ws}${rs}`; }
+  return `היום ${days}${tail}, לעומר`;
+}
+function moladText(y,m){
+  try{
+    const ml=new Hebcal.Molad(y,m), dw=["ראשון","שני","שלישי","רביעי","חמישי","שישי","שבת"][ml.getDow()];
+    let h=ml.getHour(); const min=ml.getMinutes(), ch=ml.getChalakim();
+    const per = h<5?"לפנות בוקר": h<12?"בבוקר": h<18?"אחר הצהריים":"בערב";
+    const h12 = h%12===0?12:h%12;
+    return `המולד: יום ${dw}, שעה ${h12} ו־${min} דקות ו־${ch} חלקים ${per}`;
+  }catch(e){return "";}
+}
+function rambamHe(ev){
+  return strip(ev.render("he")).replace(/פרק (\d+)-(\d+)/g,(m,a,b)=>`פרקים ${gem(+a)}–${gem(+b)}`).replace(/(\d+)/g,(m,a)=>gem(+a));
+}
+function smHe(r){
+  if(!r) return "";
+  if(/Introduction/.test(r)) return "הקדמת הרמב״ם לספר המצוות";
+  const pr=r.match(/Principle\s*(\d+)(?:-(\d+))?/); if(pr) return "שורש "+gem(+pr[1])+(pr[2]?"–"+gem(+pr[2]):"");
+  const P=[],N=[]; r.replace(/([PN])(\d+)/g,(m,t,n)=>{(t==="P"?P:N).push(gem(+n));return m;});
+  const out=[]; if(P.length) out.push("מצות עשה "+P.join(", ")); if(N.length) out.push("מצות לא תעשה "+N.join(", "));
+  return out.join("; ");
+}
+function psalmsHe(p){
+  if(!p) return "";
+  const [a,b]=p;
+  if(typeof a==="string"&&a.includes(":")){ const [ca,va]=a.split(":"), vb=String(b).split(":")[1]; return `פרק ${gem(+ca)}, פסוקים ${gem(+va)}–${gem(+vb)}`; }
+  return `${gem(+a)}–${gem(+b)}`;
+}
+function nextMonthOf(hd){ const Y=hd.getFullYear(), m=hd.getMonth(); if(m===Hebcal.HDate.monthsInYear(Y)) return {m:1,y:Y}; if(m===6) return {m:7,y:Y+1}; return {m:m+1,y:Y}; }
+function civilOf(hd){ const g=hd.greg(); return {y:g.getFullYear(),m:g.getMonth()+1,d:g.getDate()}; }
+function eventsOn(hd,il){
+  let evs=[];
+  try{ evs=Hebcal.HebrewCalendar.calendar({start:hd,end:hd,il,shabbatMevarchim:true,molad:true,noModern:true,sedrot:false}); }catch(e){}
+  return evs.filter(e=>!/Chag HaBanot|LaBehemot/.test(e.getDesc()));
+}
+function dayInfo(hd,il,civ){
+  const H=Hebcal, F=H.flags, m=hd.getMonth(), d=hd.getDate(), wd=hd.getDay(), Y=hd.getFullYear();
+  const evs=eventsOn(hd,il), z=zmanim(loc,civ), tz=loc.tz;
+  const out={events:[],study:[],prayer:[],minhag:[]};
+  const has=re=>evs.some(e=>re.test(e.getDesc()));
+  const chanukahEve=has(/^Chanukah: 1 Candle/), chanukah=has(/^Chanukah: ([2-8]) Candles|^Chanukah: 8th Day/), rc=has(/^Rosh Chodesh/);
+  for(const e of evs){
+    const desc=e.getDesc(), fl=e.getFlags();
+    if(/^Molad/.test(desc)){ { const nm=nextMonthOf(hd); out.events.push({t:moladText(nm.y,nm.m)||strip(e.render("he")),c:"soft"}); } continue; }
+    let t=strip(e.render("he")), c="";
+    if(fl&(F.MAJOR_FAST|F.MINOR_FAST)) c="fast";
+    else if(fl&(F.CHAG|F.ROSH_CHODESH|F.CHANUKAH_CANDLES)||/^Chanukah/.test(desc)) c="hol";
+    if(/^Shabbat Mevarchim/.test(desc)){
+      const nmo=nextMonthOf(hd);
+      const prevLen=H.HDate.daysInMonth(hd.getMonth(),Y);
+      const first=new H.HDate(1,nmo.m,nmo.y);
+      const dn=["ראשון","שני","שלישי","רביעי","חמישי","שישי","שבת"];
+      const rcDays= prevLen===30? `${dn[first.prev().getDay()]} ו${dn[first.getDay()]}` : dn[first.getDay()];
+      t+=` · ראש חודש ביום ${rcDays}`;
+    }
+    out.events.push({t,c});
+    if(fl&(F.MINOR_FAST)&&z){ out.events.push({t:`התענית מתחילה בעלות השחר ${hm(z.alot,tz)} ומסתיימת בצאת הכוכבים ${hm(z.tzeit,tz)}`,c:"fast"}); }
+    if(/^Tish'a B'Av$|^Yom Kippur$/.test(desc)&&z){ out.events.push({t:`מסתיים ${/Kippur/.test(desc)?"במוצאי היום":"בצאת הכוכבים"} ${hm(/Kippur/.test(desc)?z.shabEnd:z.tzeit,tz)}`,c:"fast"}); }
+    if(/^Erev Tish'a B'Av|^Erev Yom Kippur/.test(desc)&&z){ out.events.push({t:`התענית מתחילה בשקיעה ${hm(z.shkia,tz)}`,c:"fast"}); }
+    if(/^Erev Pesach/.test(desc)&&z){ out.events.push({t:`סוף זמן אכילת חמץ ${hm(z.tefila,tz)} · סוף זמן ביעור ${hm(z.tefila+z.shaah,tz)}`,c:"hol"}); }
+    if(/^Chanukah: \d/.test(desc)&&z){
+      const when = wd===5? "לפני הדלקת נרות שבת" : wd===6? `אחרי הבדלה (${hm(z.shabEnd,tz)})` : `סמוך לאחר השקיעה (${hm(z.shkia,tz)})`;
+      out.events.push({t:`הדלקת נרות חנוכה: ${when}`,c:"hol"});
+    }
+  }
+  // פרשת השבוע
+  try{
+    const sd=new H.Sedra(Y,il).lookup(hd);
+    if(sd && !sd.chag){
+      const pn=sd.parsha.map(p=>strip(H.Locale.gettext(p,"he"))).join("–");
+      out.study.push(["חומש",`פרשת ${pn} – ${ALIYOT[wd]}, עם פירוש רש״י`]);
+      if(wd===6) out.events.unshift({t:`שבת פרשת ${pn}`,c:"parsha"});
+    }
+  }catch(e){}
+  try{ out.study.push(["תהילים",psalmsHe(H.dailyPsalms(hd))]); }catch(e){}
+  try{ const r=H.tanyaYomi(hd); if(r) out.study.push(["תניא",strip(new H.TanyaYomiEvent(hd,r).render("he")).replace(/^תניא:\s*/,"")]); }catch(e){}
+  try{ out.study.push(["רמב״ם – 3 פרקים",rambamHe(new H.DailyRambam3Event(hd,H.dailyRambam3(hd)))]); }catch(e){}
+  try{ out.study.push(["רמב״ם – פרק אחד",rambamHe(new H.DailyRambamEvent(hd,H.dailyRambam1(hd)))]); }catch(e){}
+  try{ const r=H.seferHaMitzvot(hd); if(r) out.study.push(["ספר המצוות",smHe(r.reading)]); }catch(e){}
+  if(wd===6){ try{ const pa=H.pirkeiAvot(hd,il); if(pa&&pa.length) out.study.push(["פרקי אבות",(pa.length>1?"פרקים ":"פרק ")+pa.map(gem).join("–")]); }catch(e){} }
+  // אלול: ג׳ פרקי תהילים
+  let elulDay=0;
+  if(m===6) elulDay=d; else if(m===7&&d<=10) elulDay=29+d;
+  if(elulDay){
+    const a=elulDay*3-2, b= elulDay===39?150:elulDay*3;
+    out.study.push(["תהילים לאלול",(elulDay===39?"ביום הכיפורים: ":"")+`פרקים ${gem(a)}–${gem(b)}`]);
+  }
+  // פרק התהילים של הרבי
+  { const after = (m>=1&&m<=6&&!(m===1&&d<11)); const yrs=(Y-5662)-(after?0:1); out.study.push(["פרק התהילים של הרבי",`פרק ${gem(yrs+1)}`]); }
+
+  // תפילה
+  let tach=null; try{ tach=H.tachanun(hd,il); }catch(e){}
+  if(tach){
+    let sh=tach.shacharit, mi=tach.mincha;
+    if((m===9&&(d===10||d===19||d===20))||(m===4&&(d===12||d===13))) {sh=false;mi=false;}
+    { const nx=hd.next(); if(nx.getDate()===1||(nx.getDate()===30)) mi=false; }
+    if((m===9&&d===18)||(m===4&&d===11)) mi=false;
+    if(wd===6){} else out.prayer.push(["תחנון", sh&&mi?"אומרים": !sh&&!mi?"אין אומרים": sh?"בשחרית אומרים, במנחה אין אומרים":"בשחרית אין אומרים, במנחה אומרים"]);
+  }
+  const pesachFull = il? (m===1&&d===15) : (m===1&&(d===15||d===16));
+  const pesachHalf = m===1 && d>=(il?16:17) && d<=(il?21:22);
+  const sukkot = m===7 && d>=15 && d<=(il?22:23);
+  const shavuot = m===3 && (d===6 || (!il&&d===7));
+  if(chanukah||sukkot||pesachFull||shavuot) out.prayer.push(["הלל","הלל שלם"]);
+  else if(rc||pesachHalf) out.prayer.push(["הלל","חצי הלל (בחב״ד מברכים עליו)"]);
+  const cholHamoed = has(/CH''M/);
+  if(rc||cholHamoed) out.prayer.push(["יעלה ויבוא","אומרים"+(rc?" · ״ברכי נפשי״ אחר שיר של יום":"")]);
+  if(chanukah) out.prayer.push(["על הניסים","אומרים בתפילה ובברכת המזון"]);
+  if(has(/^Purim$/)) out.prayer.push(["על הניסים","אומרים בתפילה ובברכת המזון"]);
+  // גשם וטל
+  let geshem;
+  if(m===7&&d===22) geshem="מתחילים ״משיב הרוח ומוריד הגשם״ במוסף";
+  else if(m===1&&d===15) geshem="מפסיקים במוסף; מכאן אומרים ״מוריד הטל״";
+  else { const winter=(m===7&&d>22)||(m>=8)||(m===1&&d<15); geshem = winter ? "משיב הרוח ומוריד הגשם" : "מוריד הטל"; }
+  out.prayer.push(["בגבורות",geshem]);
+  // ותן טל ומטר
+  const cy=Y-3761, startD = il? null : new Date(cy,11,((cy+1)%4===0)?5:4);
+  const pes=new H.HDate(15,1,Y), pesG=pes.greg();
+  const cd=new Date(civ.y,civ.m-1,civ.d);
+  let barech;
+  if(il){
+    const s=new H.HDate(7,8,Y).greg(), eve=new H.HDate(6,8,Y).greg();
+    if(+cd===+eve) barech="הערב במעריב מתחילים ״ותן טל ומטר לברכה״";
+    else barech = (cd>=s && cd<pesG)?"ותן טל ומטר לברכה":"ותן ברכה";
+  } else {
+    if(+cd===+startD) barech="הערב במעריב מתחילים ״ותן טל ומטר לברכה״";
+    else barech = (cd>startD && cd<pesG)?"ותן טל ומטר לברכה":"ותן ברכה";
+  }
+  out.prayer.push(["בברכת השנים",barech]);
+  // ספירת העומר – בערב
+  { const nx=hd.next(); const om=new H.HDate(15,1,nx.getFullYear()); const n=(nx.getMonth()>=1&&nx.getMonth()<=3)?(nx.abs()-om.abs()):0;
+    if(n>=1&&n<=49) out.prayer.push(["ספירת העומר הערב",omerText(n)]); }
+  if(m===6&&d<29&&wd!==6) out.prayer.push(["אלול","תקיעת שופר אחר שחרית · ״לדוד ה׳ אורי״ בשחרית ובמנחה"]);
+  else if(m===6||(m===7&&d<=21)) out.prayer.push(["לדוד ה׳ אורי","אומרים בשחרית ובמנחה"]);
+
+  // מנהגים
+  out.minhag.push(...chabadDays(hd));
+  if(rc) out.minhag.push({t:"ראש חודש",x:"חצי הלל בברכה, יעלה ויבוא, ומוסף. אחר שיר של יום אומרים ״ברכי נפשי״. אין אומרים תחנון.",s:SA+" סי׳ תכב–תכג; סידור תהלת ה׳"});
+  if(m===1&&d===(il?21:22)) out.minhag.push({t:"סעודת משיח",x:"מנהג הבעל שם טוב לערוך באחרון של פסח, סמוך לשקיעה, ״סעודת משיח״ – עם מצה וארבע כוסות יין.",s:SM+", אחרון של פסח"});
+  if(chanukah||chanukahEve) out.minhag.push({t:"חנוכה",x:"מנהג חב״ד להדליק בפתח החדר, משמאל הנכנס מול המזוזה, ולהעמיד את השמש גבוה מהנרות. אומרים ״הנרות הללו״ אחר ההדלקה. נוהגים לתת דמי חנוכה לילדים, ובבית רבותינו נהגו בלילה הרביעי או החמישי. הרבי עורר על ״מבצע חנוכה״ – לזכות כל יהודי בהדלקה.",s:SM+", מנהגי חנוכה; שולחן ערוך או״ח סי׳ תרעא"});
+  if(has(/^Shabbat Mevarchim/)) out.minhag.push({t:"שבת מברכים",x:"נוהגים לומר את כל ספר התהילים בציבור בבוקר לפני התפילה, ולהתוועד במשך היום.",s:SM+", שבת מברכים (תקנת אדמו״ר הריי״צ)"});
+  if((m===4&&d>=17)||(m===5&&d<=9)) out.minhag.push({t:"בין המצרים",x:"הרבי עורר ללמוד בימים אלו את הלכות בית הבחירה ברמב״ם ואת עניני בית המקדש, ולהוסיף בצדקה.",s:"שיחות הרבי, בין המצרים"});
+  if(m===6) out.minhag.push({t:"חודש אלול",x:"מוסיפים ג׳ פרקי תהילים בכל יום (מנהג הבעש״ט), תוקעים בשופר אחר שחרית, ואומרים ״לדוד ה׳ אורי״. נוהגים לבדוק תפילין ומזוזות ולברך ״כתיבה וחתימה טובה״.",s:SM+", חודש אלול"});
+  out.events=out.events.filter(e=>e.t);
+  return out;
+}
+let libState=0, luachKey="", ccPromise=null;
+let ccData=null, ccAnchor=null, ccMode="day";
+try{ ccMode=localStorage.getItem("cc.mode")||"day"; }catch(e){}
+function ccRender(box){
+  const H=Hebcal; box.innerHTML="";
+  const head=el("div","cchead"); head.appendChild(el("h2","section-h","לוח כולל חב״ד"));
+  const seg=el("div","seg"); seg.setAttribute("role","group");
+  [["day","יום"],["week","שבוע"],["month","חודש"]].forEach(([k,t])=>{ const b=el("button",null,t); b.type="button"; b.setAttribute("aria-pressed",String(ccMode===k));
+    b.onclick=()=>{ ccMode=k; try{localStorage.setItem("cc.mode",k);}catch(e){} ccRender(box); }; seg.appendChild(b); });
+  head.appendChild(seg); box.appendChild(head);
+  const a=ccAnchor, A=a.abs();
+  let s0,s1;
+  if(ccMode==="day"){ s0=s1=A; }
+  else if(ccMode==="week"){ s0=A-a.getDay(); s1=s0+6; }
+  else { const y=a.getFullYear(), m=a.getMonth(); s0=new H.HDate(1,m,y).abs(); s1=s0+H.HDate.daysInMonth(m,y)-1; }
+  const civ=x=>civilOf(new H.HDate(x));
+  const hdShort=x=>hebDate(civ(x)).split(" ").slice(0,2).join(" ");
+  let label;
+  if(ccMode==="day"){ const c=civ(A); label=`יום ${DAYS[dow(c)].replace(" קודש","")}, ${hebDate(c)}`; }
+  else if(ccMode==="week"){ label=`${hdShort(s0)} – ${hdShort(s1)}`; }
+  else { const p=hebDate(civ(s0)).split(" "); label="חודש "+p.slice(1).join(" "); }
+  const nav=el("div","ccnav");
+  const step=(dir)=>{ let n; if(ccMode==="day") n=A+dir; else if(ccMode==="week") n=A+7*dir; else n= dir<0? new H.HDate(s0-1).abs() : s1+1;
+    let h=new H.HDate(n); if(ccMode==="month") h=new H.HDate(1,h.getMonth(),h.getFullYear()); ccAnchor=h; ccRender(box); };
+  const unit={day:"יום",week:"שבוע",month:"חודש"}[ccMode];
+  const pb=el("button","navb","→ "+unit+" קודם"); pb.type="button"; pb.onclick=()=>step(-1);
+  const nb=el("button","navb",unit+" הבא ←"); nb.type="button"; nb.onclick=()=>step(1);
+  const todayH=new H.HDate(new Date(todayIn(loc.tz).y,todayIn(loc.tz).m-1,todayIn(loc.tz).d));
+  const T=todayH.abs(), inRange=T>=s0&&T<=s1;
+  nav.appendChild(pb); nav.appendChild(midCell(label,inRange,()=>{ ccAnchor=todayH; ccRender(box); })); nav.appendChild(nb);
+  box.appendChild(nav);
+  if(window.ZM_NO_TEXTS){ const a=document.createElement("a"); a.href="https://colelchabad.org/wp-content/uploads/2026/10/Hebrew-Pocket-Luach-5787-1.pdf"; a.target="_blank"; a.rel="noopener"; a.className="hylink"; a.textContent="לוח כולל חב״ד תשפ״ז (PDF) ←"; box.appendChild(a); return; }
+  if(!ccData){ box.appendChild(el("p","note","לא הצלחתי לטעון את טקסט הלוח. רעננו את הדף.")); return; }
+  let n=0;
+  for(let x=s0;x<=s1;x++){
+    const h=new H.HDate(x); if(h.getFullYear()!==5787) continue;
+    const arr=ccData[h.getMonth()+"-"+h.getDate()]; if(!arr) continue;
+    arr.forEach(t=>{ const c=el("div","minhag cc");
+      if(ccMode!=="day"){ const cv=civ(x); const dl=el("button","ccdate",`${DAYS[dow(cv)].replace(" קודש","")} · ${hdShort(x)} · ${cv.d}.${cv.m}`); dl.type="button"; dl.title="פתח יום זה"; dl.onclick=()=>{ day=cv; render(); window.scrollTo({top:0,behavior:"smooth"}); }; c.appendChild(dl); }
+      t.split("\n").forEach((line,i)=>c.appendChild(el("p",i===0?"cch":null,line))); box.appendChild(c); n++; });
+  }
+  if(!n){
+    const out = (new H.HDate(s1).getFullYear()<5787)||(new H.HDate(s0).getFullYear()>5787);
+    box.appendChild(el("p","note", out? "הלוח שבידינו הוא לשנת תשפ״ז בלבד." : (ccMode==="day"?"אין בלוח הוראות מיוחדות ליום זה.":"אין בלוח הוראות מיוחדות בטווח זה.")));
+  }
+  { const src=el("p","note"); src.innerHTML='מקור: <a href="https://colelchabad.org/wp-content/uploads/2026/10/Hebrew-Pocket-Luach-5787-1.pdf" target="_blank" rel="noopener">לוח כולל חב״ד תשפ״ז (PDF)</a>'; box.appendChild(src); }
+}
+let hyAnchor=null, hyPromise=null;
+function midCell(label,isToday,onToday){
+  const w=el("div","ccmid"); w.appendChild(el("span","cclabel",label));
+  const t=el("button","todayb","חזרה להיום"); t.type="button"; t.disabled=!!isToday; t.onclick=onToday; w.appendChild(t);
+  return w;
+}
+function loadHY(){ if(!hyPromise) hyPromise=fetch("hayomyom.json").then(r=>r.ok?r.json():null).catch(()=>null); return hyPromise; }
+function hyRender(box){
+  box.innerHTML="";
+  box.appendChild(el("h2","section-h","היום יום"));
+  const c=hyAnchor, isT=JSON.stringify(c)===JSON.stringify(todayIn(loc.tz));
+  const nav=el("div","ccnav");
+  const pb=el("button","navb","→ אתמול"); pb.type="button"; pb.onclick=()=>{ hyAnchor=addDays(hyAnchor,-1); hyRender(box); };
+  const nb=el("button","navb","מחר ←"); nb.type="button"; nb.onclick=()=>{ hyAnchor=addDays(hyAnchor,1); hyRender(box); };
+  nav.appendChild(pb);
+  nav.appendChild(midCell(`${DAYS[dow(c)].replace(" קודש","")}${isT?" (היום)":""}, ${hebDate(c)}`,isT,()=>{ hyAnchor=todayIn(loc.tz); hyRender(box); }));
+  nav.appendChild(nb); box.appendChild(nav);
+  const card=el("div","minhag cc hycard"); box.appendChild(card);
+  const link=()=>{ const a=document.createElement("a"); a.href=`https://he.chabad.org/dailystudy/hayomyom.asp?tdate=${c.m}/${c.d}/${c.y}`; a.target="_blank"; a.rel="noopener"; a.className="hysrc"; a.textContent="היום יום באתר בית חב״ד"; return a; };
+  if(window.ZM_NO_TEXTS){ const b=link(); b.className="hylink"; b.textContent=`לקריאת "היום יום" של ${hebDate(c).split(" ").slice(0,2).join(" ")} ←`; card.appendChild(b); return; }
+  if(!window.Hebcal){ card.appendChild(link()); return; }
+  const h=new Hebcal.HDate(new Date(c.y,c.m-1,c.d)), mo=h.getMonth(), dd=h.getDate(), leap=Hebcal.HDate.isLeapYear(h.getFullYear());
+  const keys = (mo===12&&!leap) ? [`13-${dd}`,`12-${dd}`] : [`${mo}-${dd}`];
+  loadHY().then(data=>{
+    if(hyAnchor!==c) return;
+    const t=data&&keys.map(k=>data[k]).find(Boolean);
+    if(!t){ card.appendChild(el("p","note", data? "אין בספר פתגם לתאריך זה." : "לא הצלחתי לטעון את הטקסט.")); card.appendChild(link()); return; }
+    t.split("\n").forEach((line,i)=>{ if(line.trim()==="***"){ card.appendChild(el("hr","hyhr")); return; } card.appendChild(el("p",i===0?"cch":(/^(שיעורים:|חומש:|תה[י]?לים:|תניא)/.test(line)?"hyshiur":null),line)); });
+    const src=el("p","src","מתוך ספר \"היום יום\" · "); src.appendChild(link()); card.appendChild(src);
+  });
+}
+function loadCC(){ if(!ccPromise) ccPromise=fetch("luach-cc-5787.json").then(r=>r.ok?r.json():null).catch(()=>null); return ccPromise; }
+function loadLib(){
+  if(libState) return; libState=1;
+  const s=document.createElement("script"); s.src="luach-lib.js"; s.async=true;
+  s.onload=()=>{ libState=window.Hebcal?2:3; luachKey=""; renderLuach(); };
+  s.onerror=()=>{ libState=3; renderLuach(); };
+  document.head.appendChild(s);
+}
+function el(tag,cls,txt){ const e=document.createElement(tag); if(cls) e.className=cls; if(txt!=null) e.textContent=txt; return e; }
+function renderLuach(){
+  const box=$("luach"), up=$("upcoming");
+  if(libState!==2){ box.innerHTML=""; box.appendChild(el("p","note",libState===3?"לא הצלחתי לטעון את הלוח. בדקו את החיבור ורעננו את הדף.":"טוען את לוח היום…")); up.hidden=true; return; }
+  const key=JSON.stringify([day,loc.lat,loc.lon,loc.tz]); if(key===luachKey) return; luachKey=key;
+  const il=loc.tz==="Asia/Jerusalem";
+  const hd=new Hebcal.HDate(new Date(day.y,day.m-1,day.d));
+  let info; try{ info=dayInfo(hd,il,day); }catch(e){ box.innerHTML=""; box.appendChild(el("p","note","לא הצלחתי לחשב את הלוח לתאריך זה.")); return; }
+  box.innerHTML="";
+  box.appendChild(el("h2","section-h","לוח היום"));
+  if(info.events.length){ const w=el("div","chips"); info.events.forEach(e=>w.appendChild(el("span","chip-ev "+(e.c||""),e.t))); box.appendChild(w); }
+  const grid=el("div","lgrid");
+  const mk=(title,rows)=>{ const c=el("div","lcard"); c.appendChild(el("h3",null,title)); const dl=el("dl"); rows.forEach(([k,v])=>{ if(!v) return; dl.appendChild(el("dt",null,k)); dl.appendChild(el("dd",null,v)); }); c.appendChild(dl); return c; };
+  grid.appendChild(mk("חת״ת ורמב״ם",info.study));
+  grid.appendChild(mk("בתפילה",info.prayer));
+  box.appendChild(grid);
+  // היום יום
+  const hy=el("section","hybox"); box.appendChild(hy); hyAnchor=day; hyRender(hy);
+  // לוח כולל חב״ד – יום / שבוע / חודש
+  const cc=el("section","ccbox"); box.appendChild(cc);
+  ccAnchor=hd;
+  loadCC().then(data=>{ if(luachKey!==key) return; ccData=data; ccRender(cc); });
+  if(info.minhag.length){
+    box.appendChild(el("h2","section-h","מנהגים ליום זה"));
+    info.minhag.forEach(mh=>{ const c=el("div","minhag"); c.appendChild(el("h3",null,mh.t)); c.appendChild(el("p",null,mh.x)); c.appendChild(el("p","src","מקור: "+mh.s)); box.appendChild(c); });
+  }
+  const lk=el("p","note"); lk.innerHTML='הלוח המקורי: <a href="https://colelchabad.org/wp-content/uploads/2026/10/Hebrew-Pocket-Luach-5787-1.pdf" target="_blank" rel="noopener">לוח כולל חב״ד תשפ״ז (PDF)</a> · השיעורים בטקסט מלא: <a href="https://www.chabad.org/dailystudy/" target="_blank" rel="noopener">Chabad.org</a>'; box.appendChild(lk);
+
+  // הימים הקרובים
+  up.innerHTML=""; up.hidden=false; up.appendChild(el("h2","section-h","בימים הקרובים"));
+  const list=el("div","list");
+  let any=false;
+  for(let i=1;i<=10;i++){
+    const c=addDays(day,i), h=new Hebcal.HDate(new Date(c.y,c.m-1,c.d));
+    const items=[];
+    eventsOn(h,il).forEach(e=>{ const ds=e.getDesc(); if(/^Molad/.test(ds)) return; items.push(strip(e.render("he"))); });
+    chabadDays(h).forEach(x=>items.push(x.t));
+    if(h.getDay()===6){ try{ const sd=new Hebcal.Sedra(h.getFullYear(),il).lookup(h); if(sd&&!sd.chag) items.unshift("שבת פרשת "+sd.parsha.map(p=>strip(Hebcal.Locale.gettext(p,"he"))).join("–")); }catch(e){} }
+    if(!items.length) continue; any=true;
+    const b=el("button","uprow"); b.type="button";
+    const dd=el("span","ud"); dd.textContent=`${DAYS[dow(c)].replace(" קודש","")} · ${hebDate(c).split(" ").slice(0,2).join(" ")}`;
+    b.appendChild(dd); b.appendChild(el("span","ui",[...new Set(items)].join(" · ")));
+    b.onclick=()=>{ day=c; render(); window.scrollTo({top:0,behavior:"smooth"}); };
+    list.appendChild(b);
+  }
+  if(any) up.appendChild(list); else up.hidden=true;
+}
+
+// ---------- Controls ----------
+$("prev").onclick=()=>{day=addDays(day,-1);render();};
+$("next").onclick=()=>{day=addDays(day,1);render();};
+$("today").onclick=()=>{day=todayIn(loc.tz);render();};
+$("datePick").onchange=e=>{const v=e.target.value.split("-").map(Number);if(v.length===3&&v[0]){day={y:v[0],m:v[1],d:v[2]};render();}};
+
+const dlg=$("dlg");
+function drawCities(q){
+  const norm=s=>(s||"").toLowerCase().replace(/[וי"'׳״\-\s()]/g,"").replace(/ё/g,"е");
+  q=norm(q);
+  const box=$("cities"); box.innerHTML="";
+  CITIES.filter(c=>!q||norm(c.name).includes(q)||norm(c.alt).includes(q)).forEach(c=>{
+    const b=document.createElement("button"); b.type="button";
+    b.innerHTML="<span></span><small></small>";
+    b.firstChild.textContent=c.name; b.lastChild.textContent=c.alt.split(" ")[0];
+    b.onclick=()=>pick(c); box.appendChild(b);
+  });
+  if(!box.children.length) box.innerHTML='<div style="padding:12px 14px" class="note">העיר לא ברשימה. פתחו למטה "מקום אחר לפי קואורדינטות": בגוגל מפות לוחצים לחיצה ארוכה על המקום, מעתיקים את שני המספרים שמופיעים ומדביקים כאן.</div>';
+}
+function pick(c){ loc=c; store.set("zmanim.loc",c); store.set("zmanim.devtz",deviceTz); store.set("zmanim.gps",!!c.gps); $("tzBanner").hidden=true; day=todayIn(c.tz); try{dlg.close();}catch(e){dlg.removeAttribute("open");} render(); }
+let tzFilled=false;
+function fillTz(){ if(tzFilled) return; tzFilled=true; try{ const f=document.createDocumentFragment(); (Intl.supportedValuesOf?Intl.supportedValuesOf("timeZone"):[]).forEach(t=>{const o=document.createElement("option");o.value=t;f.appendChild(o);}); $("tzList").appendChild(f); }catch(e){} }
+$("customBox").addEventListener("toggle",fillTz);
+$("changeLoc").onclick=()=>{ $("search").value=""; drawCities(""); $("cTz").value=deviceTz; try{dlg.showModal();}catch(e){dlg.setAttribute("open","");} };
+$("close").onclick=()=>{try{dlg.close();}catch(e){dlg.removeAttribute("open");}};
+$("search").oninput=e=>drawCities(e.target.value);
+$("cSave").onclick=()=>{
+  const err=$("cErr"); err.hidden=true;
+  const m=$("cCoords").value.match(/(-?\d+(?:\.\d+)?)\s*[,; ]\s*(-?\d+(?:\.\d+)?)/);
+  const tz=$("cTz").value.trim();
+  if(!m){err.textContent="יש להזין קו רוחב וקו אורך, למשל 47.4979, 19.0402";err.hidden=false;return;}
+  const lat=+m[1], lon=+m[2];
+  if(Math.abs(lat)>90||Math.abs(lon)>180){err.textContent="הקואורדינטות מחוץ לטווח. בדקו שהסדר הוא רוחב ואז אורך.";err.hidden=false;return;}
+  try{ new Intl.DateTimeFormat("en",{timeZone:tz}); }catch(e){err.textContent="אזור הזמן לא מוכר. בחרו מהרשימה, למשל Europe/Moscow";err.hidden=false;return;}
+  pick({name:$("cName").value.trim()||"מקום שלי",alt:"",lat,lon,tz,candle:18});
+};
+
+// הודעת מעבר אזור זמן
+if(tzSwitch){
+  const b=$("tzBanner");
+  if(tzSwitch.to){
+    $("tzMsg").textContent=`אזור הזמן במכשיר השתנה, ולכן עברנו ל${tzSwitch.to.name}.`;
+    $("tzBack").textContent=`חזרה ל${tzSwitch.from.name}`;
+    $("tzBack").onclick=()=>pick(tzSwitch.from);
+  } else {
+    $("tzMsg").textContent="אזור הזמן במכשיר השתנה. בחרו את המקום שבו אתם נמצאים.";
+    $("tzBack").textContent="שינוי מקום";
+    $("tzBack").onclick=()=>$("changeLoc").click();
+  }
+  $("tzOk").onclick=()=>{b.hidden=true;};
+  b.hidden=false;
+}
+// GPS – פועל רק כשהאפליקציה פתוחה כאתר עצמאי (לא בתוך מסגרת)
+(function(){
+  let top=false; try{ top = window.top===window.self; }catch(e){}
+  if(!top || !navigator.geolocation) return;
+  const btn=$("gpsBtn"); btn.hidden=false;
+  const near=(lat,lon)=>{ let best=null,bd=1e9; for(const c of CITIES){ const dy=c.lat-lat, dx=(c.lon-lon)*Math.cos(lat*Math.PI/180), dd=dx*dx+dy*dy; if(dd<bd){bd=dd;best=c;} } return {c:best,km:Math.sqrt(bd)*111}; };
+  const locate=(auto)=>{
+    btn.textContent="מאתר…";
+    navigator.geolocation.getCurrentPosition(p=>{
+      const lat=+p.coords.latitude.toFixed(4), lon=+p.coords.longitude.toFixed(4), n=near(lat,lon);
+      const name = n.c && n.km<25 ? n.c.name : (n.c? `המיקום שלי (ליד ${n.c.name})` : "המיקום שלי");
+      btn.textContent="לפי GPS";
+      pick({name,alt:"",lat,lon,tz:deviceTz,candle:(n.c&&n.km<25&&n.c.candle)||18,gps:true});
+    },()=>{ btn.textContent="לפי GPS"; if(!auto){ $("tzMsg").textContent="לא התקבלה הרשאת מיקום. אפשר לאשר אותה בהגדרות הדפדפן, או לבחור מקום מהרשימה."; $("tzBack").textContent="שינוי מקום"; $("tzBack").onclick=()=>$("changeLoc").click(); $("tzOk").onclick=()=>{$("tzBanner").hidden=true;}; $("tzBanner").hidden=false; } },{enableHighAccuracy:false,timeout:15000,maximumAge:600000});
+  };
+  btn.onclick=()=>locate(false);
+  if(store.get("zmanim.gps")!==false && !location.hash) locate(true);
+})();
+
+window.addEventListener("hashchange",()=>{ const h=locFromHash(); if(h){ loc=h; store.set("zmanim.loc",h); day=todayIn(loc.tz); luachKey=""; render(); } });
+render();
+setInterval(render,30000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)render();});
+})();
+</script>
+<script src="long.js"></script>
+<script>
+(function(){
+"use strict";
+const UNITS = [
+{
+ title:`"דברך נצב בשמים"`, src:`שער היחוד והאמונה, פרקים א'–ב'`,
+ read:{ref:`שער היחוד והאמונה, פרק א', ומפרק ב'`,
+  quote:`כתיב לעולם ה' דברך נצב בשמים... תיבות ואותיות אלו הן נצבות ועומדות לעולם בתוך רקיע השמים ומלובשות בתוך כל הרקיעים לעולם להחיותם... כי אילו היו האותיות מסתלקות כרגע ח"ו וחוזרות למקורן, היו כל השמים אין ואפס ממש, והיו כלא היו כלל... ואפילו ארץ הלזו הגשמית ובחינת דומם ממש... היתה חוזרת לאין ואפס ממש.<br><br>וזה שאמר האריז"ל שגם בדומם כמו אבנים ועפר ומים יש בחינת נפש וחיות רוחנית... עד שנמשך מהן צירוף שם אבן, והוא חיותו של האבן.<br><br><i>ומפרק ב':</i> כי כאשר יצא הצורף כלי, אזי אין הכלי צריך עוד לידי הצורף... אך טח עיניהם מראות הבדל גדול שבין מעשה אנוש... שהוא יש מיש... למעשה שמים וארץ שהוא יש מאין.`},
+ stages:[
+  [`השמים`,`צייר את הרקיע — גדול, קבוע, כאילו עומד מעצמו אלפי שנים. ובאמת המילים "יהי רקיע" נאמרות בתוכו עכשיו. הרקיע לא "נברא פעם" — הוא נברא ברגע זה. כמו קול שופר: קיים רק כל עוד תוקעים.`],
+  [`האבן`,`רד אל הדבר הכי נמוך ו"מת": אבן, עפר, הרצפה שמתחתיך. גם בה יש "נפש" — אותיות דבר ה' שהשתלשלו עד שנעשו "אבן". הכלי של הצורף נשאר אחרי שהלך לשוק; כאן — אם ה' "הולך", לא נשארת אבן שבורה. לא נשאר כלום.`],
+  [`אני, עכשיו`,`הסתכל על היד, על הגוף, על הנשימה הזו. גם אני נאמר עכשיו מפי ה'. אני לא עומד מולו כדבר נפרד שהוא ברא — ברגע זה ממש אני דבר ה'.`]],
+ feel:[`<b>ביטול:</b> מה אני ומה כל העולם, אם הכול רק דבר ה'?`,`<b>מתיקות:</b> ה' לא רחוק. הוא כאן, בתוך כל דבר, ורוצה בי ברגע זה.`],
+ sentence:`כל מה שאני רואה, וגם אני עצמי — דבר ה' מהווה עכשיו.`,
+ tefilla:`ב"ברוך שאמר": <b>"ברוך אומר ועושה"</b> — אומר עכשיו, והעולם נעשה עכשיו.`,
+ learn:`שער היחוד והאמונה, פרקים א'–ב' — בפנים ובעיון.`,
+ qs:[`<b>(פרק א')</b> למה צריך התהוות מחודשת בכל רגע? מה ההבדל בין בריאה יש מאין לצורף שעושה כלי מכסף?`,`<b>(פרק א')</b> איך מוסבר שהשם "אבן" הוא החיות של האבן?`,`<b>(פרק ב')</b> מהי בדיוק טעות "המינים", שחשבו שה' עזב את הארץ אחרי הבריאה?`,`<b>(פרק ב')</b> באיזה מובן הנבראים "בטלים במציאות"? למה זה יחוד אמיתי ולא רק משל?`]
+},
+{
+ title:`"חלק אלוקה ממעל ממש"`, src:`תניא, פרק ב'`,
+ read:{ref:`תניא, פרק ב'`,
+  quote:`ונפש השנית בישראל היא חלק אלוה ממעל ממש, כמו שכתוב ויפח באפיו נשמת חיים, ואתה נפחת בי. וכמו שכתוב בזוהר: מאן דנפח, מתוכיה נפח. פירוש: מתוכיותו ומפנימיותו, שתוכיות ופנימיות החיות שבאדם מוציא בנפיחתו בכח.<br><br>כך עד"מ נשמות ישראל עלו במחשבה, כדכתיב בני בכורי ישראל, בנים אתם לה' אלקיכם. פירוש: כמו שהבן נמשך ממוח האב, כך כביכול נשמת כל איש ישראל נמשכה ממחשבתו וחכמתו יתברך...<br><br>...ואפילו צפרני רגליו נתהוו מאותה טפה ממש... ועם כל זה עדיין היא מקושרת ומיוחדת בהתקשרות נפלאה ועצומה במהותה ועצמותה, כמו שהייתה טפה במוח האב.`},
+ stages:[
+  [`הנפיחה`,`נשום נשימה עמוקה. בדיבור יוצא רק מעט מהאדם; בנפיחה בכוח — יוצא מהפנים, מהעומק. כך הנשמה: לא "דיבור" של ה' כמו שאר הנבראים, אלא נפיחה מתוכיותו ומפנימיותו.`],
+  [`הבן והאב`,`הבן נמשך ממוח האב. אפילו הציפורניים — החלק הכי חיצוני — נעשו מאותה טיפה, ועדיין קשורות במהות ובעצם. מה "הציפורניים" אצלי? הרגעים הכי חיצוניים ונמוכים. גם שם הנשמה קשורה לה' כמו שהייתה למעלה.`],
+  [`אני, עכשיו`,`בתוכי עכשיו יש חלק אלוקה — לא "כוח רוחני" כללי, אלא חלק ממנו ממש. חלק שנפרד מהשלם כוסף לחזור אליו. חפש את הכיסופים האלה בתוכך. הם קיימים, גם אם מכוסים.`]],
+ feel:[`<b>אהבה כמו של בן:</b> אני לא עבד זר שעומד מבחוץ — אני בן שבא אל אביו.`,`<b>שנאת מה שמכסה:</b> כשרואים מה הנשמה, מבינים כמה זר לה כל מה שמסתיר את הקשר. השנאה לקליפה צומחת מכאן.`],
+ sentence:`בתוכי יש חלק אלוקה ממש, והוא כוסף לשוב אליו.`,
+ tefilla:`ב<b>"אלוקי, נשמה שנתת בי טהורה היא... ואתה נפחתה בי"</b> — "טהורה היא" בהווה: גם עכשיו, גם בי.`,
+ learn:`תניא פרק ב', ואחריו פרקים י"ח–י"ט (האהבה המסותרת, "נר ה' נשמת אדם").`,
+ qs:[`<b>(פרק ב')</b> שלוש ראיות: "ויפח באפיו", "ואתה נפחת בי", "מאן דנפח". מה מוסיפה כל אחת?`,`<b>(פרק ב')</b> אם כל הנשמות מחכמה עילאה — מאיפה ההבדלים ביניהן? ומה תפקיד קדושת ההורים?`,`<b>(פרק י"ח)</b> למה האהבה המסותרת היא "ירושה לנו מאבותינו", ולמה היא גם אצל "קל שבקלים"?`,`<b>(פרק י"ט)</b> השלהבת רוצה לעלות גם במחיר כיבויה. מה זה מלמד על מסירות נפש, ואיך זה מתקשר להתבוננות של הבוקר?`]
+},
+{
+ title:`"כמים הפנים לפנים"`, src:`תניא, פרק מ"ו`,
+ read:{ref:`תניא פרק מ"ו — מתחילת הפרק ("והנה יש עוד דרך ישרה לפני איש") — לקרוא בפנים את המשל והנמשל`,
+  quote:`כמים הפנים לפנים, כן לב האדם לאדם.`,
+  sum:`תוכן הקטע: משל למלך גדול ונורא שבא בעצמו ובכבודו אל איש פשוט ושפל, המוטל באשפה, מקים אותו, מכניסו להיכלו ומתקרב אליו בפנימיות — כמה אהבה מתעוררת בלב האיש. והנמשל: הקב"ה הניח את כל העליונים ובחר בנו, הוציאנו ממצרים — "ערוות הארץ" — וקירבנו אליו, ונתן לנו את התורה והמצוות שהן רצונו וחכמתו. המצוות הן כחיבוק: "וימינו תחבקני". ומכאן האהבה מתעוררת כתשובה לאהבתו.`},
+ stages:[
+  [`המשל`,`צייר את המשל בפרטים: מלך גדול ונורא — לא שולח שליח, בא בעצמו. האיש — לא סתם פשוט, אלא מוטל באשפה. המלך מרים אותו, מכניס להיכל, מחבק פנים בפנים. איך מרגיש האיש הזה?`],
+  [`הנמשל`,`עכשיו הנמשל: ה' הניח את המלאכים ואת העולמות העליונים, ירד להר סיני "בעצמו ובכבודו", ובחר דווקא בנו — אחרי מצרים, ערוות הארץ. "ובנו בחרת מכל עם ולשון".`],
+  [`אני, עכשיו`,`הבוקר: הטלית, התפילין, התורה שאלמד — זה החיבוק של המלך עכשיו, אליי. "וימינו תחבקני" — ברגע זה.`]],
+ feel:[`<b>אהבה כתשובה:</b> "מי אני ומה אני" — ובכל זאת הוא בחר בי.`,`<b>רצון לתת בחזרה:</b> כמים הפנים לפנים — הוא נתן את עצמו, אני נותן לו את היום שלי.`],
+ sentence:`המלך עזב הכול ובחר בי — ואני נותן לו את כולי.`,
+ tefilla:`ב<b>"אהבה רבה"</b>: "ובנו בחרת מכל עם ולשון, וקרבתנו לשמך הגדול".`,
+ learn:`תניא פרק מ"ו כולו, בעיון. מי שיש לו זמן — גם פרק מ"ה (רחמים על הנשמה).`,
+ qs:[`מה תפקיד כל פרט במשל: "גדול ונורא", "שפל ונבזה", "מוטל באשפה", "בעצמו ובכבודו"?`,`מה ההבדל בין אהבה שבאה מהתבוננות בגדולת ה' לבין אהבה של "כמים הפנים"? למה זו האחרונה נקראת "דרך ישרה" שקרובה לכל אחד?`,`באיזה מובן המצוות הן "חיבוק" — ולא רק ציווי?`,`איך זה משנה את הרגע שבו אני מניח תפילין?`]
+},
+{
+ title:`מהי הקליפה`, src:`תניא, פרקים כ"ב–כ"ד`,
+ read:{ref:`תניא פרק כ"ב (מהות הקליפה), ופרק כ"ד מתחילתו — לקרוא בפנים`,
+  quote:`אני ואפסי עוד.`,
+  sum:`תוכן הקטע: כל הנבראים מקבלים חיות מה'. הקדושה היא מה שבטל אליו ומרגיש שהוא רק אלוקות. הקליפה היא מה שמרגיש את עצמו "יש ודבר בפני עצמו" — כפרעה שאמר "לי יאורי ואני עשיתיני" — ולכן נקראת "סטרא אחרא" ו"אלוהים אחרים". בפרק כ"ד: העובר על רצון ה', בשעת מעשה הוא נפרד מה' ונמוך אפילו מהקליפות, שהרי הן אינן עוברות על רצונו (כבלעם, שלא יכול לעבור על פי ה').`},
+ stages:[
+  [`קדושה מול קליפה`,`ההבדל אינו "טוב" מול "רע" בלבד — אלא ביטול מול "אני". קדושה: אני כלום, הוא הכול. קליפה: אני כאן, אני עשיתי, מגיע לי.`],
+  [`החטא`,`בלעם רצה לקלל — ולא יכול היה לעבור על פי ה'. גם הקליפות לא מעיזות. ואדם בשעת חטא, אפילו "קטן", מעיז — ויורד מתחתיהן. התבונן כמה זה חמור, לא כאשמה אלא כפרספקטיבה.`],
+  [`אני, עכשיו`,`מצא את ה"אני" שבך: הכעס, הגאווה, התאווה, ה"מגיע לי". זו הקליפה — וזה לא אתה. אמור לעצמך: "זה זר לנשמה שלי".`]],
+ feel:[`<b>שנאה — לא לעצמי,</b> אלא לנפרדות: אינני רוצה להיות נפרד ממנו אפילו רגע.`,`<b>בהירות:</b> כשמזהים את הקליפה כ"זרה", קל יותר להרחיק אותה.`],
+ sentence:`כל "אני" שמכסה עליו — זר לי, ואני מרחיק אותו.`,
+ tefilla:`בברכות השחר: <b>"ואל תביאנו... לידי ניסיון... ודבקנו במצוותיך"</b>.`,
+ learn:`תניא פרקים כ"ב–כ"ה.`,
+ qs:[`<b>(כ"ב)</b> איך הקליפה מקבלת חיות מה' ובכל זאת מרגישה נפרדת? מהו "בבחינת גלות"?`,`<b>(כ"ג)</b> למה התורה והמצוות הן יחוד גמור — ולכן החטא הוא ההפך הגמור?`,`<b>(כ"ד)</b> למה החוטא בשעת מעשה נמוך מהקליפות? מה הראיה מבלעם?`,`<b>(כ"ה)</b> כל יהודי מוכן למסור נפשו שלא לעבוד עבודה זרה. איך משתמשים בזה מול ניסיון "קטן" היום?`]
+},
+{
+ title:`"הנה ה' נצב עליו"`, src:`תניא, פרק מ"א`,
+ read:{ref:`תניא פרק מ"א — מתחילת הפרק ("ברם צריך להיות לזכרון תמיד ראשית העבודה ועיקרה ושרשה") — לקרוא בפנים`,
+  quote:`הנה ה' נצב עליו ומלא כל הארץ כבודו, ומביט עליו ובוחן כליות ולב, אם עובדו כראוי.`,
+  sum:`תוכן הקטע: ראשית העבודה ושורשה היא יראה — לפחות יראה תתאה, להיות סור מרע ולעשות טוב כעבד לפני אדונו. ולכן יתבונן שה' נצב עליו ממש ומביט בו, ויעבוד לפניו באימה וביראה כעומד לפני המלך. ואם אינו יכול להגיע לרגש — לפחות יקבל עליו עול מלכות שמים.`},
+ stages:[
+  [`נצב עליו`,`לא "ה' בשמים" — ה' עומד עליי, כאן, בחדר הזה, ממש עכשיו. נסה להרגיש את נוכחותו מעל ראשך.`],
+  [`מביט ובוחן`,`הוא לא רואה רק את המעשה, אלא "כליות ולב" — את המחשבות והמניעים. מה הפער בין מה שרואים עליי מבחוץ לבין מה שבפנים? הוא רואה את שניהם.`],
+  [`קבלת עול`,`גם אם אין רגש — אני מקבל: "הריני עבדך". היום אעשה רצונך, בין אם ארגיש ובין אם לא.`]],
+ feel:[`<b>יראה:</b> האימה של העומד לפני המלך.`,`<b>יציבות:</b> קבלת עול לא תלויה במצב הרוח — היא בסיס שאפשר לבנות עליו.`],
+ sentence:`המלך עומד עליי ומביט בי — ואני עבדו.`,
+ tefilla:`לפני שמונה עשרה, ב<b>"ה' שפתי תפתח"</b> — לעמוד כעבד לפני המלך.`,
+ learn:`תניא פרק מ"א כולו.`,
+ qs:[`למה היראה היא "ראשית העבודה ושורשה" — עוד לפני האהבה?`,`מהי "יראה תתאה" ובמה היא שונה מ"יראה עילאה"?`,`מה מוסיפה הכוונה "לייחדא קודשא בריך הוא ושכינתיה" לפני מצווה ולימוד?`,`מה עושה מי שאינו מצליח להתעורר — והאם עבודתו שווה פחות?`]
+},
+{
+ title:`שמחה באלוקות`, src:`תניא, פרק ל"ג`,
+ read:{ref:`תניא פרק ל"ג — מתחילת הפרק ("עוד זאת תהיה שמחת הנפש האמיתית") — לקרוא בפנים`,
+  quote:`ישמח ישראל בעושיו.`,
+  sum:`תוכן הקטע: שמחת הנפש האמיתית באה מההתבוננות ביחוד ה' — שהוא ממלא את כל העולמות וכולם בטלים אליו ממש. והמשל: כמה גדולה שמחת איש פשוט ושפל כשהמלך בא לדור עמו בדירה אחת בביתו. וכך כל יהודי — ה' שוכן אצלו ממש, בתורה ובמצוות. מכאן שמחה שאינה תלויה במצבו.`},
+ stages:[
+  [`יחוד`,`חזור לנקודה של יחידה 1: אין עוד מלבדו. כל העולמות בטלים אליו כאור השמש בשמש. זו לא ידיעה יבשה — זו המציאות האמיתית.`],
+  [`המלך גר אצלי`,`צייר: המלך עצמו נכנס לבית שלך הפשוט, ואומר: כאן אני רוצה לגור. כמה שמחה! וזה מה שקורה כשאני לומד תורה ומקיים מצווה.`],
+  [`אני, עכשיו`,`יהיה מצב הרוח שלי היום אשר יהיה — האמת הזו לא משתנה. השמחה הזו לא תלויה ברגש, ולכן היא "אמיתית".`]],
+ feel:[`<b>שמחה פנימית</b> ושקטה, שאינה תלויה בהצלחות.`,`<b>הכבדות של הנפש הבהמית נחלשת</b> — העצבות היא כלי של הקליפה, והשמחה מבטלת אותה.`],
+ sentence:`המלך גר אצלי — איך אפשר שלא לשמוח?`,
+ tefilla:`בפסוקי דזמרה, במזמור <b>"הללוי־ה שירו לה' שיר חדש"</b>: "ישמח ישראל בעושיו".`,
+ learn:`תניא פרקים ל"א, ל"ג ול"ד.`,
+ qs:[`<b>(ל"א)</b> מה ההבדל בין מרירות לעצבות? ולמה העצבות היא מצד הקליפה?`,`<b>(ל"ג)</b> למה דווקא השמחה הזו נקראת "שמחת הנפש האמיתית"?`,`<b>(ל"ג)</b> מה כוחו של משל המלך הגר בבית — מה הוא מוסיף על ההבנה השכלית?`,`<b>(ל"ד)</b> איך אדם עושה את עצמו "מרכבה" ו"משכן" — בפועל, ביום רגיל?`]
+},
+{
+ title:`דירה בתחתונים`, src:`תניא, פרקים ל"ו–ל"ז`,
+ read:{ref:`תניא פרק ל"ו — מתחילת הפרק ("והנה מודעת זאת מאמר רז"ל") — לקרוא בפנים`,
+  quote:`שתכלית בריאת עולם הזה הוא שנתאוה הקב"ה להיות לו דירה בתחתונים.`,
+  sum:`תוכן הקטע: העולם הזה הוא התחתון ביותר, שאין תחתון למטה ממנו בהסתר אורו ית' — עולם של חושך וקליפה. ודווקא כאן רצה ה' דירה. כשהאדם מהפך את החושך לאור, נעשה "יתרון האור מן החושך". ובפרק ל"ז: בקיום המצוות בדברים גשמיים, הגשמיות עצמה נעשית כלי לאלוקות, ועיקר השלמות תהיה לעתיד לבוא.`},
+ stages:[
+  [`למה דווקא למטה`,`ה' לא רצה דירה אצל המלאכים, אלא דווקא בעולם הנמוך והחשוך. "תאווה" — רצון שאין לו הסבר. ואני נמצא בדיוק במקום שהוא רצה.`],
+  [`העולם שלי`,`עבור על המקומות המוחשיים של היום: המשרד, הרחוב, הכסף, האוכל, השיחות. כל אחד מהם הוא חדר בדירה שה' רוצה.`],
+  [`כל מעשה`,`כל ברכה, כל צדקה, כל מילה טובה — מוסיפה "לבנה" בדירה. וכל דבר רע שאני מהפך — הופך חושך לאור.`]],
+ feel:[`<b>משמעות:</b> אין רגע ריק ביום.`,`<b>שנאת החושך הופכת לרצון לשנות אותו</b> — לא רק לברוח מהקליפה, אלא להפוך אותה.`],
+ sentence:`היום אני בונה לו דירה — דווקא כאן.`,
+ tefilla:`בסוף התפילה, ב<b>"עלינו"</b>: "לתקן עולם במלכות ש־די". בשבת — גם ב"נשמת כל חי".`,
+ learn:`תניא פרקים ל"ו–ל"ז.`,
+ qs:[`מהי "תאווה" אצל ה', ולמה אין לה טעם?`,`למה יתרון האור הבא מן החושך גדול מאור שלא היה בו חושך?`,`<b>(ל"ז)</b> למה הצדקה מודגשת במיוחד כמעלה את הנפש הבהמית?`,`איך כל זה קשור לגאולה ולתחיית המתים?`]
+},
+{
+ title:`"מוחא שליט על ליבא"`, src:`תניא, פרק י"ב`,
+ read:{ref:`תניא פרק י"ב — לקרוא בפנים מתחילת הפרק`,
+  quote:`המוח שליט על הלב בתולדתו ובטבע יצירתו.`,
+  sum:`תוכן הקטע: הבינוני הוא מי שהרע לעולם אינו גובר בו כדי להשתלט על "העיר הקטנה" — להתלבש במחשבה, דיבור ומעשה. התאוות יכולות לעלות בלב, אבל המוח שליט על הלב מטבעו, ובכוח היראה שבמוח אדם יכול שלא להוציא אותן לפועל — בכל רגע.`},
+ stages:[
+  [`העיר הקטנה`,`בגוף שלי יש שתי נפשות שנלחמות על "העיר הקטנה" — כל אחת רוצה לשלוט במחשבה, בדיבור ובמעשה.`],
+  [`כוח טבעי`,`"בתולדתו ובטבע יצירתו" — לא צריך להיות צדיק. השליטה של המוח על הלב היא בטבע של כל אדם. היא זמינה לי בכל רגע.`],
+  [`אני, היום`,`זהה ניסיון אחד שצפוי לך היום (כעס, דיבור, מבט, בזבוז זמן). החלט עכשיו, במוח, מה תעשה כשהוא יבוא.`]],
+ feel:[`<b>כוח ולא ייאוש:</b> המלחמה ניתנת לניצחון בכל רגע.`,`<b>שנאה לקליפה עם ביטחון</b> — היא לא חזקה ממני.`],
+ sentence:`המוח שלי שליט על הלב — ובכל רגע אני בוחר.`,
+ tefilla:`בקריאת שמע: <b>"ולא תתורו אחרי לבבכם ואחרי עיניכם"</b>.`,
+ learn:`תניא פרקים ט', י"ב וי"ג.`,
+ qs:[`<b>(ט')</b> מהי מלחמת "העיר הקטנה"? מי נלחם במי ועל מה?`,`<b>(י"ב)</b> מהו בדיוק "בינוני"? מה מותר לו להרגיש ומה לא?`,`<b>(י"ג)</b> למה בכל זאת אומרים "אל תהי רשע בפני עצמך"? מה העבודה של "ויהי בעיניך כרשע"?`,`איך חי אדם במלחמה מתמדת בלי ייאוש?`]
+},
+{
+ title:`"אתכפיא סטרא אחרא"`, src:`תניא, פרק כ"ז`,
+ read:{ref:`תניא פרק כ"ז — לקרוא בפנים מתחילת הפרק`,
+  quote:`אתכפיא סטרא אחרא לתתא, אסתלק יקרא דקודשא בריך הוא לעילא.`,
+  sum:`תוכן הקטע: מי שעולות בו מחשבות רעות — אל יעצב, ואדרבה. בכל פעם שהוא דוחה את המחשבה, נעשה נחת רוח גדולה למעלה, ככתוב בזוהר. ויש שני מיני נחת: מביטול הרע לגמרי (עבודת הצדיק), ומהכפייה וההיפוך (עבודת הבינוני) — כמו מאכלים חריפים וחמוצים שמתוקנים ומתקבלים בטעם מיוחד.`},
+ stages:[
+  [`המחשבות באות`,`מחשבה רעה שעולה אינה סימן לכישלון. זה המצב הטבעי של הבינוני. השאלה היא רק מה עושים איתה.`],
+  [`כל דחייה`,`כל פעם שאני מסיח דעתי ממחשבה רעה — "אסתלק יקרא דקב"ה בכולהו עלמין". נחת רוח מיוחדת שלא באה מצדיקים.`],
+  [`אני, היום`,`תכנן: כשהמחשבה תבוא היום — חייך בפנים: "הנה עוד הזדמנות לגרום נחת רוח למלך".`]],
+ feel:[`<b>שמחה במלחמה:</b> שנאת הקליפה הופכת לאנרגיה, לא לדיכאון.`,`<b>ערך לכל רגע של מאבק.</b>`],
+ sentence:`כל דחייה של מחשבה רעה — נחת רוח למלך.`,
+ tefilla:`בברכות השחר: <b>"ואל תשלט בנו יצר הרע"</b>.`,
+ learn:`תניא פרקים כ"ו–כ"ח.`,
+ qs:[`<b>(כ"ו)</b> למה העצבות היא האויב הגדול במלחמה? מה משל המתאבקים?`,`<b>(כ"ז)</b> מהם שני מיני הנחת, ולמה יש מעלה דווקא בעבודת הבינוני?`,`<b>(כ"ח)</b> מה עושים כשמחשבות זרות באות דווקא בתפילה? מה המשל?`,`איך זה משנה את היחס שלי למאבקים שלי?`]
+},
+{
+ title:`גערה בנפש הבהמית`, src:`תניא, פרק כ"ט`,
+ read:{ref:`תניא פרק כ"ט — לקרוא בפנים`,
+  quote:`אעא דלא סליק ביה נהורא, מבטשין ליה.`,
+  sum:`תוכן הקטע: לפעמים הלב "אטום", ואין האדם יכול לעורר בו רגש. העצה: עץ שהאור אינו נאחז בו — מכתתים אותו. כך ישבור האדם את גסות הנפש הבהמית בהכנעה ובחשבון נפש, ויגער בה: עד מתי תסתיר ממני את אור ה'? ויבדיל את עצמו ממנה — היא איננה אני.`},
+ stages:[
+  [`אבחון`,`הלב אטום? לא מרגיש? זה לא סוף — זה סימן שיש שכבה שמסתירה. העץ עבה מדי, והאש לא נאחזת.`],
+  [`השבירה`,`חשבון נפש כן, בלי הנחות: כמה הנפש הבהמית שולטת בי, כמה גסות יש בה. ההכנעה הזו "מכתתת" את העץ, והאור מתחיל להיאחז.`],
+  [`הגערה`,`דבר אל היצר, בתוכך: "אתה לא אני. עד מתי תסתיר ממני את אור ה'?" ואחר כך — חזור לשמחה. השבירה היא אמצעי, לא מטרה.`]],
+ feel:[`<b>שנאה ברורה וחדה לקליפה</b> — אבל לא לעצמי.`,`<b>הקלה:</b> אחרי השבירה הלב נפתח.`],
+ sentence:`אתה לא אני — ולא תסתיר ממני את אור ה'.`,
+ tefilla:`בשמונה עשרה: <b>"השיבנו אבינו לתורתך"</b>.`,
+ learn:`תניא פרקים כ"ט–ל"א.`,
+ qs:[`<b>(כ"ט)</b> למה דווקא השבירה גורמת לאור "להיאחז"?`,`<b>(ל')</b> איך אפשר להרגיש שפל מכל אדם — באמת ולא כמליצה? מה הראיה מ"אל תדין את חברך"?`,`<b>(ל"א)</b> מה ההבדל בין מרירות לעצבות, ולמה המרירות צריכה זמן קבוע?`,`למה אחרי חשבון נפש באה דווקא שמחה?`]
+},
+{
+ title:`ניצוץ משה רבינו`, src:`תניא, פרק מ"ב`,
+ read:{ref:`תניא פרק מ"ב — לקרוא בפנים מתחילת הפרק`,
+  quote:`אין, לגבי משה מילתא זוטרתי היא.`,
+  sum:`תוכן הקטע: איך אומרים שיראה היא "דבר קטן"? לגבי משה — ומשה, ניצוץ ממנו יש בכל יהודי, ובכוחו כל אחד יכול להגיע לדעת ולהתבוננות. ועיקר העבודה: להרגיל את המחשבה לראות בכל דבר את חיות ה' שבו, עד שהיראה נעשית טבע.`},
+ stages:[
+  [`ניצוץ משה`,`בתוכי יש ניצוץ ממשה רבינו — כוח הדעת. היראה לא "גדולה מדי" בשבילי; היא קרובה, כי משה בתוכי.`],
+  [`הרגל`,`חזור ליחידה 1: בכל דבר שאני רואה — דבר ה'. ככל שמתרגלים לראות כך, היראה נעשית טבעית ולא מאומצת.`],
+  [`אני, היום`,`בחר שלושה רגעים קבועים היום (למשל: יציאה מהבית, ארוחת צהריים, לפני שינה). בכל אחד — עצור ואמור: "ה' נצב עליי".`]],
+ feel:[`<b>יראה טבעית ושקטה,</b> לא כבדה.`,`<b>אמון בכוחות:</b> יש בי מה שצריך.`],
+ sentence:`בכל דבר שאני רואה — אני רואה אותו.`,
+ tefilla:`בברכות קריאת שמע: <b>"יוצר אור ובורא חושך"</b> — בורא עכשיו.`,
+ learn:`תניא פרקים מ"ב–מ"ג.`,
+ qs:[`<b>(מ"ב)</b> איך יכולה היראה להיות "מילתא זוטרתי" למשה ובכל זאת נדרשת מכולם?`,`<b>(מ"ב)</b> מהו תפקיד ניצוץ משה שבכל דור ובכל נפש?`,`<b>(מ"ג)</b> יראה תתאה ועילאה, אהבת עולם ואהבה רבה — מה ההבדלים?`,`איך בונים הרגל של התבוננות במשך היום?`]
+},
+{
+ title:`"נפשי אויתיך"`, src:`תניא, פרק מ"ד`,
+ read:{ref:`תניא פרק מ"ד — לקרוא בפנים מתחילת הפרק`,
+  quote:`נפשי אויתיך בלילה.`,
+  sum:`תוכן הקטע: בכל נפש יש שתי בחינות של אהבה. האחת — "נפשי אויתיך": ה' הוא נפשי וחיי האמיתיים, ולכן אני משתוקק אליו כמו שאדם אוהב את חייו. והשנייה, גבוהה יותר — כאהבת הבן לאביו, שהיא טבעית ועמוקה מכל שכל.`},
+ stages:[
+  [`הוא חיי`,`כמה אדם אוהב את חייו — בלי שאלות. ה' הוא החיים האמיתיים של החיים שלי. בלעדיו אין לי כלום.`],
+  [`בן ואב`,`ילד שרץ אל אביו לא חושב "למה". האהבה הזו מעל השכל, והיא כבר בתוכי.`],
+  [`אני, עכשיו`,`אמור בלב, לאט: "אבא". הרגש מה עולה.`]],
+ feel:[`<b>אהבה טבעית</b> שלא צריך לייצר — רק לגלות.`,`<b>געגוע:</b> "בלילה" — גם בחושך, דווקא בחושך.`],
+ sentence:`הוא חיי, והוא אבי.`,
+ tefilla:`ב<b>"אהבה רבה"</b>: "אבינו האב הרחמן".`,
+ learn:`תניא פרקים מ"ד–מ"ה.`,
+ qs:[`<b>(מ"ד)</b> מה ההבדל בין שתי האהבות, ולמה אהבת הבן גבוהה יותר?`,`<b>(מ"ד)</b> למה "בלילה"? מה הלילה מוסיף לאהבה?`,`<b>(מ"ה)</b> מהי דרך הרחמים — רחמים על הניצוץ האלוקי שבגלות בגוף? איך הם מביאים לאהבה?`,`איך זה מתחבר ליחידה 2 ("חלק אלוקה ממעל")?`]
+},
+{
+ title:`יציאת מצרים בכל יום`, src:`תניא, פרק מ"ז`,
+ read:{ref:`תניא פרק מ"ז — לקרוא בפנים`,
+  quote:`בכל דור ודור ובכל יום ויום חייב אדם לראות את עצמו כאילו הוא יצא היום ממצרים.`,
+  sum:`תוכן הקטע: אדמו"ר הזקן מוסיף "ובכל יום ויום". יציאת מצרים היא יציאת הנפש האלוקית ממאסר הגוף והנפש הבהמית — וזה נעשה בכל יום בקבלת עול מלכות שמים בקריאת שמע, כשהנפש נכללת ומתייחדת באור ה'.`},
+ stages:[
+  [`מצרים — מיצרים`,`מה הם ה"מיצרים" שלי? הרגלים, פחדים, תאוות, דאגות — הגבולות שסוגרים על הנשמה.`],
+  [`היציאה`,`בקריאת שמע, כשאני מקבל עליי "ה' אחד" — הנשמה יוצאת מהמיצרים ומתאחדת עם מקורה. זו יציאת מצרים, כאן ועכשיו.`],
+  [`אני, היום`,`בחר "מצרים" אחד שתצא ממנו היום. מה יהיה אחרת כשתצא?`]],
+ feel:[`<b>חירות ושמחה.</b>`,`<b>שנאת הקליפה כשנאת בית סוהר</b> — ומי לא רוצה לצאת?`],
+ sentence:`היום אני יוצא ממצרים — דרך "שמע ישראל".`,
+ tefilla:`בסוף קריאת שמע: <b>"אני ה' אלוקיכם אשר הוצאתי אתכם מארץ מצרים"</b>, וב"אמת ויציב".`,
+ learn:`תניא פרקים מ"ז ומ"ט.`,
+ qs:[`<b>(מ"ז)</b> למה הוסיף אדמו"ר הזקן "ובכל יום ויום"?`,`<b>(מ"ז)</b> איך קריאת שמע היא יציאת מצרים?`,`<b>(מ"ט)</b> ה' צמצם והסתיר את עצמו בשביל האדם — מה האדם נדרש "לסלק" בתמורה?`,`מה "מצרים" שלי בפועל — ומה הצעד הראשון לצאת ממנו?`]
+},
+{
+ title:`אור השמש בשמש`, src:`שער היחוד והאמונה, פרק ג'`,
+ read:{ref:`שער היחוד והאמונה, פרק ג' — לקרוא בפנים`,
+  quote:`אין עוד מלבדו.`,
+  sum:`תוכן הקטע: משל לאור השמש. ברקיע ועל הארץ האור נראה כדבר קיים, אבל בגוף השמש עצמו — האור בטל לגמרי ואינו נחשב כלל. כך כל הנבראים לגבי מקורם, דבר ה': הם בטלים במציאות. הם נראים קיימים רק לעינינו, מפני שאיננו רואים את המקור.`},
+ stages:[
+  [`הקרן בחוץ`,`צייר קרן שמש שנכנסת לחדר — רואים אותה, היא מאירה, היא נראית "דבר".`],
+  [`הקרן בשמש`,`עכשיו צייר את אותה קרן בתוך גוף השמש — שם אין לה שום מציאות, היא כלום מול המקור.`],
+  [`אני, מצדו`,`מצד ה' — כל העולם, וגם אני, בטלים כקרן בשמש. ובכל זאת — הוא רוצה בי, בדיוק כמו שאני.`]],
+ feel:[`<b>ביטול עמוק</b> ושקט.`,`<b>מתיקות של "אין עוד"</b> — הכול הוא, והכול טוב.`],
+ sentence:`אין עוד מלבדו — ובכל זאת הוא רוצה בי.`,
+ tefilla:`ב<b>"ה' אחד"</b> שבקריאת שמע, וב"עלינו": "וידעת היום... אין עוד".`,
+ learn:`שער היחוד והאמונה, פרקים ג'–ד'.`,
+ qs:[`<b>(ג')</b> מה ההבדל בין "בטל במציאות" לבין "אינו קיים"?`,`<b>(ג')</b> למה הנבראים נראים לנו קיימים?`,`<b>(ד')</b> מה תפקיד מידת הגבורה והצמצום — כדי שיהיה עולם בכלל?`,`איך חיים עם "אין עוד מלבדו" ביום עבודה רגיל?`]
+}
+];
+
+const N = UNITS.length;
+let state = {current:0, done:[]};
+let tab = "short";
+let ref = null, writing = false, pending = false;
+
+function load(){
+  try{ const s = JSON.parse(localStorage.getItem("chassidus_progress")||"null"); if(s && typeof s.current==="number") state = {current:s.current, done:Array.isArray(s.done)?Array.from(s.done):[]}; }catch(e){}
+}
+function saveLocal(){ try{ localStorage.setItem("chassidus_progress", JSON.stringify(state)); }catch(e){} }
+async function saveRemote(){
+  if(!ref) return;
+  if(writing){ pending = true; return; }
+  writing = true;
+  try{
+    const w = ref.set({current:state.current, done:Array.from(state.done), updated:new Date().toISOString()});
+    await Promise.race([w, new Promise(r=>setTimeout(r,8000))]);
+    setSync("ההתקדמות נשמרה ✓");
+  }
+  catch(e){ setSync(""); }
+  finally{ writing = false; }
+  if(pending){ pending = false; saveRemote(); }
+}
+function save(){ saveLocal(); saveRemote(); }
+function setSync(t){ document.getElementById("c_sync").textContent = t; }
+
+function esc(s){ return s; }
+function render(){
+  const head = document.getElementById("c_head");
+  const main = document.getElementById("c_main");
+  const tabs = document.getElementById("c_tabs");
+  const pct = Math.round(state.done.length / N * 100);
+  if(state.current >= N){
+    head.innerHTML = "";
+    tabs.style.display = "none";
+    main.innerHTML = `<div class="end"><h1>סיימת את הסבב! 🎉</h1><p>${N} יחידות הושלמו.</p><p class="note">חזור לשיחה עם Claude ובקש את הסבב הבא — קונטרס ומעין, קונטרס התפילה וליקוטי תורה.</p></div>`;
+    document.getElementById("c_doneBtn").style.display = "none";
+    document.getElementById("c_prevBtn").disabled = false;
+    return;
+  }
+  tabs.style.display = "";
+  document.getElementById("c_doneBtn").style.display = "";
+  const u = UNITS[state.current];
+  head.innerHTML = `<h1>${u.title}</h1><div class="src">יחידה ${state.current+1} · ${u.src}</div>
+    <div class="bar"><i style="width:${pct}%"></i></div><div class="count">הושלמו ${state.done.length} מתוך ${N}</div>`;
+  document.querySelectorAll("#chs .tab").forEach(b=>b.classList.toggle("on", b.dataset.t===tab));
+  if(tab==="short"){
+    const r = u.read;
+    main.innerHTML = `
+      <div class="timer"><button id="c_tBtn">⏱ טיימר 10 דקות</button><span id="c_tOut"></span></div>
+      <div class="card"><h2>א. קריאה בפנים <small>כ־3 דקות</small></h2>
+        <div class="note">${r.ref}</div>
+        <div class="quote">${r.quote}</div>
+        ${r.sum ? `<p style="margin:8px 0 0">${r.sum}</p>` : ""}
+      </div>
+      <div class="card"><h2>ב. התבוננות — בלי ספר <small>כ־6 דקות</small></h2>
+        ${u.stages.map((s,i)=>`<div class="stage"><b>שלב ${i+1}: ${s[0]}</b> <span class="note">(2 דק')</span><br>${s[1]}</div>`).join("")}
+      </div>
+      <div class="card"><h2>ג. המסקנה בלב <small>כ־1 דקה</small></h2>
+        <ul>${u.feel.map(f=>`<li>${f}</li>`).join("")}</ul>
+      </div>
+      <div class="card sentence"><h2>ד. המשפט לתפילה</h2>
+        <div class="big">"${u.sentence}"</div>
+        <div>${u.tefilla}</div>
+      </div>
+      <p class="note">אם סיימת שלב מהר — חזור עליו והוסף פרטים: עוד דבר שאתה רואה, עוד ציור. ההתבוננות נוגעת בלב דרך הפרטים.</p>`;
+    bindTimer();
+  } else {
+    const L = (typeof LONG!=="undefined" && LONG[state.current]) || [];
+    main.innerHTML = `
+      <p class="note" style="margin:0 0 12px">אותו רעיון כמו בבוקר — בהרחבה ובעומק.</p>
+      ${L.map(s=>`<div class="card"><h2>${s[0]}</h2>${s[1]}</div>`).join("")}
+      <div class="card"><h2>להעמקה נוספת בספר <small>רשות</small></h2><ol>${u.qs.map(q=>`<li>${q}</li>`).join("")}</ol></div>`;
+  }
+  document.getElementById("c_prevBtn").disabled = state.current===0;
+  renderList();
+  if(!document.getElementById("chs").hidden) window.scrollTo({top:0});
+}
+function renderList(){
+  document.getElementById("c_list").innerHTML = UNITS.map((u,i)=>{
+    const cls = state.done.includes(i) ? "fin" : (i===state.current ? "cur" : "");
+    return `<button class="unit-row ${cls}" data-i="${i}"><span class="n">${state.done.includes(i)?"✓":i+1}</span><span><b>${u.title}</b><br><span class="note">${u.src}</span></span></button>`;
+  }).join("");
+  document.querySelectorAll("#chs .unit-row").forEach(b=>b.onclick=()=>{ state.current=+b.dataset.i; tab="short"; save(); closeSheet(); render(); });
+}
+let tInt=null;
+function bindTimer(){
+  const btn=document.getElementById("c_tBtn"), out=document.getElementById("c_tOut");
+  btn.onclick=()=>{
+    if(tInt){ clearInterval(tInt); tInt=null; out.textContent=""; btn.textContent="⏱ טיימר 10 דקות"; return; }
+    let s=600; btn.textContent="עצור";
+    const show=()=>{ out.textContent = Math.floor(s/60)+":"+String(s%60).padStart(2,"0"); };
+    show();
+    tInt=setInterval(()=>{ s--; show(); if(s<=0){ clearInterval(tInt); tInt=null; out.textContent="✓ הזמן עבר — לתפילה"; btn.textContent="⏱ טיימר 10 דקות"; } },1000);
+  };
+}
+function closeSheet(){ document.getElementById("c_sheet").classList.remove("open"); }
+
+document.querySelectorAll("#chs .tab").forEach(b=>b.onclick=()=>{ tab=b.dataset.t; render(); });
+document.getElementById("c_doneBtn").onclick=()=>{
+  const done = Array.from(state.done||[]);
+  if(!done.includes(state.current)) done.push(state.current);
+  state = {current: Math.min(state.current+1, N), done};
+  tab="short"; render();
+  try{ save(); }catch(e){}
+};
+document.getElementById("c_prevBtn").onclick=()=>{ if(state.current>0){ state.current--; tab="short"; save(); render(); } };
+document.getElementById("c_menuBtn").onclick=()=>document.getElementById("c_sheet").classList.add("open");
+document.getElementById("c_sheet").onclick=e=>{ if(e.target.id==="c_sheet") closeSheet(); };
+
+load(); render();
+
+(async()=>{
+  try{
+    if(!window.claude || typeof window.claude.use!=="function") return;
+    const [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+    if(!db || !user) return;
+    const id = await user.id();
+    if(!id) return;
+    ref = db.collection("data/users/"+id).doc("progress");
+    const snap = await ref.get();
+    let d = null;
+    if(snap){ d = (typeof snap.data==="function") ? snap.data() : (snap.data && typeof snap.data==="object" ? snap.data : snap); }
+    if(d && typeof d.current==="number"){
+      state = {current:d.current, done:Array.isArray(d.done)?Array.from(d.done):[]};
+      saveLocal(); render();
+    }
+    setSync("ההתקדמות מסונכרנת בין המכשירים ✓");
+  }catch(e){}
+})();
+
+})();
+</script>
+<section id="gm" dir="rtl" hidden>
+  <div id="gmApp" class="gmapp"><p class="note">טוען את הגמרא…</p></div>
+</section>
+<script>
+(function(){
+"use strict";
+const TRACT={id:"horayot",file:"gemara-horayot.json"};
+const DONE=["סנהדרין","מכות","שבועות","עדיות","עבודה זרה"];
+const LS="gemara.pos";
+const app=document.getElementById("gmApp");
+let data=null, loading=null, pos={t:TRACT.id,a:0,s:-1,updated:""}, view=0, ref=null, writing=false, pending=false;
+const $e=(tag,cls,txt)=>{const e=document.createElement(tag); if(cls) e.className=cls; if(txt!=null) e.textContent=txt; return e;};
+try{ const p=JSON.parse(localStorage.getItem(LS)); if(p&&p.t===TRACT.id&&typeof p.a==="number") pos=p; }catch(e){}
+view=pos.a;
+
+function nowIso(){ return new Date().toISOString(); }
+function saveLocal(){ try{ localStorage.setItem(LS,JSON.stringify(pos)); }catch(e){} }
+async function saveRemote(){
+  if(!ref) return; if(writing){ pending=true; return; } writing=true;
+  try{ await Promise.race([ref.set({t:pos.t,a:pos.a,s:pos.s,updated:pos.updated}), new Promise(r=>setTimeout(r,8000))]); }catch(e){}
+  writing=false; if(pending){ pending=false; saveRemote(); }
+}
+function setPos(a,s){ pos={t:TRACT.id,a,s,updated:nowIso()}; saveLocal(); saveRemote(); }
+
+function load(){
+  if(!loading) loading=fetch(TRACT.file).then(r=>r.ok?r.json():null).catch(()=>null).then(d=>{ data=d; if(d){ const n=nextPoint(); view=n.a<d.amudim.length?n.a:d.amudim.length-1; } render(true); return d; });
+  return loading;
+}
+function nextPoint(){ // the next segment to learn after the saved position
+  if(!data) return {a:0,s:0};
+  let a=pos.a, s=pos.s+1;
+  if(a<data.amudim.length && s>=data.amudim[a].seg.length){ a++; s=0; }
+  return {a,s};
+}
+function render(scrollToNext){
+  app.innerHTML="";
+  if(!data){ app.appendChild($e("p","note",loading?"טוען את הגמרא…":"לא הצלחתי לטעון את הגמרא. רעננו את הדף.")); return; }
+  const N=data.amudim.length, nxt=nextPoint(), finished=nxt.a>=N;
+  // header
+  const hd=$e("header","gmhead");
+  hd.appendChild($e("div","gmeyebrow",`סדר ${data.seder}`));
+  hd.appendChild($e("h1","gmtitle",`מסכת ${data.title}`));
+  const doneAm = finished? N : nxt.a + (nxt.s>0? nxt.s/data.amudim[nxt.a].seg.length : 0);
+  const bar=$e("div","gmbar"); const fill=$e("i"); fill.style.width=Math.round(doneAm/N*100)+"%"; bar.appendChild(fill); hd.appendChild(bar);
+  hd.appendChild($e("div","gmcount", finished? "סיימת את המסכת! 🎉" : `הגעת עד ${data.amudim[nxt.a].label}${nxt.s>0?`, קטע ${nxt.s+1}`:""} · ${Math.round(doneAm/N*100)}%`));
+  app.appendChild(hd);
+  if(finished){
+    const c=$e("div","gmsiyum");
+    c.appendChild($e("p","gmsiyumh","הדרן עלך מסכת הוריות, והדרך עלן!"));
+    c.appendChild($e("p",null,`סיימת את סדר נזיקין: ${DONE.join(", ")} והוריות. כתוב ל־Claude איזו מסכת להוסיף עכשיו.`));
+    const again=$e("button","gmbtn ghost","להתחיל את הוריות מחדש"); again.type="button"; again.onclick=()=>{ setPos(0,-1); view=0; render(); }; c.appendChild(again);
+    app.appendChild(c);
+  }
+  // amud nav
+  const nav=$e("div","gmnav");
+  const prev=$e("button","navb","→ עמוד קודם"); prev.type="button"; prev.disabled=view<=0; prev.onclick=()=>{ view--; render(); window.scrollTo({top:0}); };
+  const sel=$e("select","gmsel"); sel.id="gmSel"; sel.setAttribute("aria-label","בחירת עמוד");
+  data.amudim.forEach((a,i)=>{ const o=$e("option",null,a.label); o.value=i; if(i===view) o.selected=true; sel.appendChild(o); });
+  sel.onchange=()=>{ view=+sel.value; render(); window.scrollTo({top:0}); };
+  const next=$e("button","navb","עמוד הבא ←"); next.type="button"; next.disabled=view>=N-1; next.onclick=()=>{ view++; render(); window.scrollTo({top:0}); };
+  nav.appendChild(prev); nav.appendChild(sel); nav.appendChild(next); app.appendChild(nav);
+  if(!finished && view!==nxt.a){ const back=$e("button","todayb","חזרה למקום שבו עצרתי"); back.type="button"; back.onclick=()=>{ view=nxt.a; render(true); }; const w=$e("div","gmback"); w.appendChild(back); app.appendChild(w); }
+  // segments
+  const am=data.amudim[view];
+  app.appendChild($e("h2","gmamud",am.label));
+  let target=null;
+  am.seg.forEach((sg,j)=>{
+    const done = view<pos.a || (view===pos.a && j<=pos.s);
+    const isNext = !finished && view===nxt.a && j===nxt.s;
+    const card=$e("article","gmseg"+(done?" done":"")+(isNext?" next":"")); card.id=`gm-${view}-${j}`;
+    if(isNext){ card.appendChild($e("div","gmhere","כאן ממשיכים")); target=card; }
+    const exp=$e("div","gmexp"); exp.innerHTML=sg.s||sg.a; card.appendChild(exp);
+    const tools=$e("div","gmtools");
+    const panes=[];
+    const addTool=(label,cls,build)=>{ const b=$e("button","gmtool",label); b.type="button"; b.setAttribute("aria-expanded","false");
+      const p=$e("div","gmpane "+cls); p.hidden=true; build(p); panes.push(p);
+      b.onclick=()=>{ p.hidden=!p.hidden; b.setAttribute("aria-expanded",String(!p.hidden)); }; tools.appendChild(b); };
+    addTool("גמרא","aram",p=>{ p.innerHTML=sg.a; });
+    if(sg.r.length) addTool(`רש״י (${sg.r.length})`,"rashi",p=>{ sg.r.forEach(x=>{ const q=$e("p"); q.innerHTML=x.replace(/^([^-–]{1,60}?)\s[-–]\s/,"<b>$1</b> – "); p.appendChild(q); }); });
+    if(sg.t.length) addTool(`תוספות (${sg.t.length})`,"tos",p=>{ sg.t.forEach(x=>{ const q=$e("p"); q.innerHTML=x.replace(/^([^.]{1,60}?\.)\s/,"<b>$1</b> "); p.appendChild(q); }); });
+    const mark=$e("button","gmmark",done?"✓ נלמד":"סיימתי עד כאן"); mark.type="button";
+    mark.onclick=()=>{ setPos(view,j); if(j===am.seg.length-1 && view<N-1){ view++; render(true); window.scrollTo({top:0}); } else render(); };
+    tools.appendChild(mark);
+    card.appendChild(tools); panes.forEach(p=>card.appendChild(p));
+    app.appendChild(card);
+  });
+  // end of amud
+  const endw=$e("div","gmend");
+  if(view<N-1){ const b=$e("button","gmbtn",`סיימתי את ${am.label} ← ${data.amudim[view+1].label}`); b.type="button"; b.onclick=()=>{ setPos(view,am.seg.length-1); view++; render(true); window.scrollTo({top:0}); }; endw.appendChild(b); }
+  else { const b=$e("button","gmbtn","סיימתי את המסכת"); b.type="button"; b.onclick=()=>{ setPos(view,am.seg.length-1); render(); window.scrollTo({top:0}); }; endw.appendChild(b); }
+  app.appendChild(endw);
+  app.appendChild($e("p","note gmcredit",data.credit));
+  app.appendChild($e("p","note",`למדת השנה: ${DONE.join(", ")}.`));
+  if(scrollToNext && target) setTimeout(()=>target.scrollIntoView({behavior:"smooth",block:"start"}),60);
+}
+window.gmOpen=function(){ if(!data){ load(); render(); } else { view=nextPoint().a<data.amudim.length? nextPoint().a : view; render(true); } };
+(async()=>{
+  try{
+    if(!window.claude||typeof window.claude.use!=="function") return;
+    const [db,user]=await Promise.all([window.claude.use("db"),window.claude.use("user")]);
+    if(!db||!user) return; const id=await user.id(); if(!id) return;
+    ref=db.collection("data/users/"+id).doc("gemara");
+    const snap=await ref.get();
+    let d=null; if(snap){ d=(typeof snap.data==="function")?snap.data():(snap.data&&typeof snap.data==="object"?snap.data:snap); }
+    if(d&&d.t===TRACT.id&&typeof d.a==="number"&&(d.updated||"")>(pos.updated||"")){ pos={t:d.t,a:d.a,s:(typeof d.s==="number"?d.s:-1),updated:d.updated}; saveLocal(); if(data){ view=nextPoint().a<data.amudim.length?nextPoint().a:view; render(); } }
+    else if(pos.updated) saveRemote();
+  }catch(e){}
+})();
+})();
+</script>
+
+<script>
+(function(){
+  const P={zm:document.getElementById("zm"),chs:document.getElementById("chs"),gm:document.getElementById("gm")};
+  const T={zm:document.getElementById("tabZm"),chs:document.getElementById("tabChs"),gm:document.getElementById("tabGm")};
+  const TITLE={zm:"זמני היום",chs:"לימוד חסידות יומי",gm:"גמרא – הוריות"};
+  function show(which,save){
+    if(!P[which]) which="zm";
+    Object.keys(P).forEach(k=>{ P[k].hidden=(k!==which); T[k].setAttribute("aria-selected",String(k===which)); });
+    document.title=TITLE[which];
+    if(save){ try{localStorage.setItem("app.tab",which);}catch(e){} }
+    window.scrollTo({top:0});
+    if(which==="gm"&&window.gmOpen) window.gmOpen();
+  }
+  Object.keys(T).forEach(k=>{ T[k].onclick=()=>show(k,true); });
+  let start="zm"; try{ start=localStorage.getItem("app.tab")||"zm"; }catch(e){}
+  if(location.hash==="#limud") start="chs"; if(location.hash==="#zmanim") start="zm"; if(location.hash==="#gemara") start="gm";
+  show(start,false);
+})();
+</script>
+
+</body></html>
+</body>
+</html>
