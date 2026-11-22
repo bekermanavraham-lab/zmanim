@@ -285,6 +285,76 @@ details summary{cursor:pointer;font-weight:600;color:var(--sky)}
   <p class="note">החישוב לפי שיטת אתר Chabad.org (שיטת אדמו״ר הזקן): שעות זמניות מהנץ האמיתי עד השקיעה האמיתית, עלות 16.9°, משיכיר 10.2°, צאת הכוכבים 6°, מוצאי שבת 8.5°, הדלקת נרות 18 דקות לפני השקיעה (ירושלים 40). כמו באתר עצמו, מומלץ לא לסמוך על הדקה האחרונה ולהשאיר שתי דקות מרווח.</p>
 </div>
 
+<script>
+// ---- ZS: shared cloud sync between devices (standalone site only; Firestore REST, one doc per sync key) ----
+window.ZS=(function(){
+  "use strict";
+  const CLOUD=/github\.io$/.test(location.hostname);
+  const FS="https://firestore.googleapis.com/v1/projects/zmanim-sync/databases/(default)/documents/sync/";
+  let k=null; try{ k=localStorage.getItem("zm.sync"); }catch(e){}
+  const m=location.hash.match(/[#&]k=([A-Za-z0-9]{24,64})/);
+  if(m){ k=m[1]; const h=location.hash.replace(/[#&]k=[A-Za-z0-9]{24,64}/,"").replace(/^#&/,"#"); try{ history.replaceState(null,"",location.pathname+location.search+(h==="#"?"":h)); }catch(e){} }
+  if(!k && CLOUD){ const a=new Uint8Array(24); crypto.getRandomValues(a); k=Array.from(a,b=>"abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"[b%57]).join(""); }
+  if(k){ try{ localStorage.setItem("zm.sync",k); }catch(e){} }
+  window.zmSyncKey=k;
+  const on=CLOUD&&!!k;
+  function enc(v){
+    if(v===null||v===undefined) return {nullValue:null};
+    if(typeof v==="string") return {stringValue:v};
+    if(typeof v==="boolean") return {booleanValue:v};
+    if(typeof v==="number") return Number.isInteger(v)?{integerValue:String(v)}:{doubleValue:v};
+    if(Array.isArray(v)) return {arrayValue:{values:v.map(enc)}};
+    const f={}; Object.keys(v).forEach(x=>f[x]=enc(v[x])); return {mapValue:{fields:f}};
+  }
+  function dec(v){
+    if(!v) return null;
+    if("stringValue" in v) return v.stringValue;
+    if("integerValue" in v) return +v.integerValue;
+    if("doubleValue" in v) return +v.doubleValue;
+    if("booleanValue" in v) return v.booleanValue;
+    if("nullValue" in v) return null;
+    if("arrayValue" in v) return (v.arrayValue.values||[]).map(dec);
+    if("mapValue" in v){ const o={}, f=v.mapValue.fields||{}; Object.keys(f).forEach(x=>o[x]=dec(f[x])); return o; }
+    return null;
+  }
+  // get(field): object = remote value; null = nothing stored yet; undefined = could not read (network)
+  async function get(field){
+    if(!on) return null;
+    try{ const r=await fetch(FS+k+"?_="+Date.now(),{cache:"no-store"}); if(r.status===404) return null; if(!r.ok) return undefined;
+      const j=await r.json(); const f=j.fields&&j.fields[field]; return f?dec(f):null; }catch(e){ return undefined; }
+  }
+  const timers={};
+  function put(field,obj){
+    if(!on) return; clearTimeout(timers[field]);
+    timers[field]=setTimeout(()=>{
+      const body={fields:{updated:{stringValue:obj.updated||new Date().toISOString()}}}; body.fields[field]=enc(obj);
+      fetch(FS+k+"?updateMask.fieldPaths="+field+"&updateMask.fieldPaths=updated",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(body),keepalive:true}).catch(()=>{});
+    },600);
+  }
+  // pull(field, getLocal, applyRemote): newest "updated" wins; never overwrite the cloud after a failed read
+  function puller(field,getLocal,applyRemote,isValid){
+    let busy=false, retry=null;
+    async function pull(tries){
+      if(!on||busy) return; busy=true; clearTimeout(retry);
+      const d=await get(field); busy=false;
+      if(d===undefined){ const n=(tries||0)+1; if(n<=6) retry=setTimeout(()=>pull(n),n*2000); return; }
+      const loc=getLocal(); const ok=d&&(!isValid||isValid(d));
+      if(ok && (d.updated||"")>((loc&&loc.updated)||"")) applyRemote(d);
+      else if(loc&&loc.updated&&(!ok||(d.updated||"")<loc.updated)) put(field,loc);
+    }
+    if(on){
+      pull();
+      document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") pull(); });
+      window.addEventListener("pageshow",()=>pull());
+      window.addEventListener("focus",()=>pull());
+      window.addEventListener("online",()=>pull());
+      setInterval(()=>{ if(document.visibilityState==="visible") pull(); },60000);
+    }
+    return pull;
+  }
+  return {on,key:k,get,put,puller};
+})();
+</script>
 <section id="chs" dir="rtl" hidden>
 <div class="wrap">
   <header>
@@ -1981,7 +2051,7 @@ let tab = "short";
 let ref = null, writing = false, pending = false;
 
 function load(){
-  try{ const s = JSON.parse(localStorage.getItem("chassidus_progress")||"null"); if(s && typeof s.current==="number") state = {current:s.current, done:Array.isArray(s.done)?Array.from(s.done):[]}; }catch(e){}
+  try{ const s = JSON.parse(localStorage.getItem("chassidus_progress")||"null"); if(s && typeof s.current==="number") state = {current:s.current, done:Array.isArray(s.done)?Array.from(s.done):[], updated:s.updated||""}; }catch(e){}
 }
 function saveLocal(){ try{ localStorage.setItem("chassidus_progress", JSON.stringify(state)); }catch(e){} }
 async function saveRemote(){
@@ -1997,7 +2067,7 @@ async function saveRemote(){
   finally{ writing = false; }
   if(pending){ pending = false; saveRemote(); }
 }
-function save(){ saveLocal(); saveRemote(); }
+function save(){ state.updated=new Date().toISOString(); saveLocal(); saveRemote(); if(window.ZS&&ZS.on) ZS.put("chs",{current:state.current,done:Array.from(state.done),updated:state.updated}); }
 function setSync(t){ document.getElementById("c_sync").textContent = t; }
 
 function esc(s){ return s; }
@@ -2086,6 +2156,14 @@ document.getElementById("c_sheet").onclick=e=>{ if(e.target.id==="c_sheet") clos
 
 load(); render();
 
+if(window.ZS&&ZS.on){
+  ZS.puller("chs",
+    ()=> (state.updated || state.current>0 || state.done.length) ? {current:state.current,done:Array.from(state.done),updated:state.updated||"0"} : null,
+    d=>{ state={current:d.current,done:Array.isArray(d.done)?d.done.map(Number):[],updated:d.updated}; saveLocal(); render(); },
+    d=> typeof d.current==="number");
+  setSync("ההתקדמות מסונכרנת בין המכשירים ✓");
+}
+
 (async()=>{
   try{
     if(!window.claude || typeof window.claude.use!=="function") return;
@@ -2113,34 +2191,8 @@ load(); render();
 <script>
 (function(){
 "use strict";
-// ---- cloud sync between devices (standalone site only; Firestore REST) ----
-const CLOUD = /github\.io$/.test(location.hostname);
-const FS="https://firestore.googleapis.com/v1/projects/zmanim-sync/databases/(default)/documents/sync/";
-let syncKey=null;
-(function(){
-  let k=null; try{ k=localStorage.getItem("zm.sync"); }catch(e){}
-  const m=location.hash.match(/[#&]k=([A-Za-z0-9]{24,64})/);
-  if(m){ k=m[1]; const h=location.hash.replace(/[#&]k=[A-Za-z0-9]{24,64}/,"").replace(/^#&/,"#"); try{ history.replaceState(null,"",location.pathname+location.search+(h==="#"?"":h)); }catch(e){} }
-  if(!k && CLOUD){ const a=new Uint8Array(24); crypto.getRandomValues(a); k=Array.from(a,b=>"abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"[b%57]).join(""); }
-  if(k){ try{ localStorage.setItem("zm.sync",k); }catch(e){} }
-  syncKey=k; window.zmSyncKey=k;
-})();
-async function cloudGet(){
-  if(!CLOUD||!syncKey) return null;
-  // returns: object = remote position; null = no remote position yet (404); undefined = could not read (network etc.)
-  try{ const r=await fetch(FS+syncKey+"?_="+Date.now(),{cache:"no-store"}); if(r.status===404) return null; if(!r.ok) return undefined; const j=await r.json();
-    const g=j.fields&&j.fields.gm&&j.fields.gm.mapValue&&j.fields.gm.mapValue.fields; if(!g) return null;
-    return {t:g.t&&g.t.stringValue, a:+(g.a&&g.a.integerValue), s:+(g.s&&g.s.integerValue), updated:(g.updated&&g.updated.stringValue)||""};
-  }catch(e){ return undefined; }
-}
-let cloudTimer=null;
-function cloudPut(p){
-  if(!CLOUD||!syncKey) return; clearTimeout(cloudTimer);
-  cloudTimer=setTimeout(()=>{
-    const body={fields:{updated:{stringValue:p.updated},gm:{mapValue:{fields:{t:{stringValue:p.t},a:{integerValue:String(p.a)},s:{integerValue:String(p.s)},updated:{stringValue:p.updated}}}}}};
-    fetch(FS+syncKey+"?updateMask.fieldPaths=gm&updateMask.fieldPaths=updated",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(body),keepalive:true}).catch(()=>{});
-  },600);
-}
+const CLOUD=window.ZS&&ZS.on;
+function cloudPut(p){ if(CLOUD) ZS.put("gm",p); }
 const TRACT={id:"zevachim",file:"gemara-zevachim.json"};
 const DONE=["סנהדרין","מכות","שבועות","עדיות","עבודה זרה","הוריות"];
 const LS="gemara.pos";
@@ -2158,24 +2210,10 @@ async function saveRemote(){
   writing=false; if(pending){ pending=false; saveRemote(); }
 }
 function setPos(a,s){ pos={t:TRACT.id,a,s,updated:nowIso()}; saveLocal(); saveRemote(); cloudPut(pos); }
-let pulling=false, pullRetry=null;
-async function cloudPull(tries){
-  if(!CLOUD||!syncKey||pulling) return; pulling=true; clearTimeout(pullRetry);
-  const d=await cloudGet(); pulling=false;
-  if(d===undefined){ // could not read: never overwrite the cloud with an old position; try again shortly
-    const n=(tries||0)+1; if(n<=6) pullRetry=setTimeout(()=>cloudPull(n),n*2000); return; }
-  const remoteNewer = d && d.t===TRACT.id && !isNaN(d.a) && (d.updated||"")>(pos.updated||"");
-  if(remoteNewer){ pos={t:d.t,a:d.a,s:isNaN(d.s)?-1:d.s,updated:d.updated}; saveLocal(); if(data){ view=nextPoint().a<data.amudim.length?nextPoint().a:view; render(); } }
-  else if(pos.updated && pos.t===TRACT.id && (!d || d.t!==TRACT.id || (d.updated||"")<pos.updated)) cloudPut(pos);
-}
-if(CLOUD){
-  cloudPull();
-  document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") cloudPull(); });
-  window.addEventListener("pageshow",()=>cloudPull());
-  window.addEventListener("focus",()=>cloudPull());
-  window.addEventListener("online",()=>cloudPull());
-  setInterval(()=>{ if(document.visibilityState==="visible") cloudPull(); },60000);
-}
+if(CLOUD) ZS.puller("gm",
+  ()=> (pos.updated&&pos.t===TRACT.id)? pos : null,
+  d=>{ pos={t:d.t,a:d.a,s:(typeof d.s==="number"?d.s:-1),updated:d.updated}; saveLocal(); if(data){ view=nextPoint().a<data.amudim.length?nextPoint().a:view; render(); } },
+  d=> d.t===TRACT.id && typeof d.a==="number");
 
 function load(){
   if(!loading) loading=fetch(TRACT.file).then(r=>r.ok?r.json():null).catch(()=>null).then(d=>{ data=d; if(d){ const n=nextPoint(); view=n.a<d.amudim.length?n.a:d.amudim.length-1; } render(true); return d; });
