@@ -187,6 +187,20 @@ details summary{cursor:pointer;font-weight:600;color:var(--sky)}
 .rbsticky .segs i b{display:block;height:100%;background:var(--gold)}
 .rbunitmeta{font-size:.82rem;color:var(--muted);margin-top:-4px}
 .rbhl{font-size:.76rem;color:var(--muted);font-weight:600}
+.stickbar{position:sticky;top:64px;z-index:55;background:var(--bg);padding:6px 0;box-shadow:0 6px 10px -8px rgba(0,0,0,.25)}
+.daynav.stickbar{margin:0 0 4px;flex-wrap:nowrap;gap:6px}
+.daynav.stickbar button{padding:6px 9px;white-space:nowrap}
+.daynav.stickbar input{flex:1;min-width:0;width:auto}
+.c_stick{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 0}
+.c_stick .navb{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 12px;font:inherit;font-size:.9rem;white-space:nowrap;color:var(--ink)}
+.c_stick .navb:disabled{opacity:.4}
+.c_stick #c_sMid{font-size:.85rem;color:var(--muted);font-weight:700;text-align:center}
+.gmnav{position:sticky;top:64px;z-index:55;background:var(--bg);padding:6px 0;box-shadow:0 6px 10px -8px rgba(0,0,0,.25)}
+.gmseg{scroll-margin-top:120px}
+.rbtop{position:sticky;top:64px;z-index:55;background:var(--bg);padding:6px 0;display:flex;flex-direction:column;gap:6px;box-shadow:0 6px 10px -8px rgba(0,0,0,.25)}
+.rbtop .rbsticky{position:static;box-shadow:none}
+.rbh{scroll-margin-top:170px}
+
 .gmseg{scroll-margin-top:72px}
 
 .gmapp{display:flex;flex-direction:column;gap:12px}
@@ -286,13 +300,13 @@ details summary{cursor:pointer;font-weight:600;color:var(--sky)}
     </div>
     <div class="tzbanner" id="tzBanner" hidden><span id="tzMsg"></span><span class="tzact"><button type="button" class="linkbtn" id="tzBack"></button><button type="button" class="linkbtn" id="tzOk">אישור</button></span></div>
     <div class="dates" id="dates"></div>
-    <div class="daynav">
+  </header>
+    <div class="daynav stickbar">
       <button type="button" id="prev" aria-label="יום קודם">‹ אתמול</button>
       <button type="button" id="today">היום</button>
       <button type="button" id="next" aria-label="יום הבא">מחר ›</button>
       <input type="date" id="datePick" aria-label="בחירת תאריך">
     </div>
-  </header>
 
   <div>
     <div class="arc" id="arc"><div class="now" id="nowMark" hidden></div></div>
@@ -393,6 +407,7 @@ window.ZS=(function(){
     </div>
     <div id="c_head"></div>
   </header>
+  <div class="stickbar c_stick" id="c_stick"><button type="button" class="navb" id="c_sPrev">→ הקודמת</button><span id="c_sMid"></span><button type="button" class="navb" id="c_sNext">הבאה ←</button></div>
   <div class="tabs" id="c_tabs">
     <button class="tab on" data-t="short">☀️ לפני התפילה</button>
     <button class="tab" data-t="long">📖 לימוד היום</button>
@@ -2111,6 +2126,7 @@ function render(){
     main.innerHTML = `<div class="end"><h1>סיימת את הסבב! 🎉</h1><p>${N} יחידות הושלמו.</p><p class="note">חזור לשיחה עם Claude ובקש את הסבב הבא — קונטרס ומעין, קונטרס התפילה וליקוטי תורה.</p></div>`;
     document.getElementById("c_doneBtn").style.display = "none";
     document.getElementById("c_prevBtn").disabled = false;
+    document.getElementById("c_sMid").textContent="סיימת את הסבב"; document.getElementById("c_sNext").disabled=true; document.getElementById("c_sPrev").disabled=false;
     return;
   }
   tabs.style.display = "";
@@ -2148,6 +2164,9 @@ function render(){
       <div class="card"><h2>להעמקה נוספת בספר <small>רשות</small></h2><ol>${u.qs.map(q=>`<li>${q}</li>`).join("")}</ol></div>`;
   }
   document.getElementById("c_prevBtn").disabled = state.current===0;
+  { const sp=document.getElementById("c_sPrev"), sn=document.getElementById("c_sNext"), sm=document.getElementById("c_sMid");
+    sp.disabled = state.current===0; sn.disabled = state.current>=N-1;
+    sm.textContent = `יחידה ${state.current+1} מתוך ${N}` + (state.done.includes(state.current)?" ✓":""); }
   renderList();
   if(!document.getElementById("chs").hidden) window.scrollTo({top:0});
 }
@@ -2180,6 +2199,8 @@ document.getElementById("c_doneBtn").onclick=()=>{
   try{ save(); }catch(e){}
 };
 document.getElementById("c_prevBtn").onclick=()=>{ if(state.current>0){ state.current--; tab="short"; save(); render(); } };
+document.getElementById("c_sPrev").onclick=()=>{ if(state.current>0){ state.current--; tab="short"; save(); render(); } };
+document.getElementById("c_sNext").onclick=()=>{ if(state.current<N-1){ state.current++; tab="short"; save(); render(); } };
 document.getElementById("c_menuBtn").onclick=()=>document.getElementById("c_sheet").classList.add("open");
 document.getElementById("c_sheet").onclick=e=>{ if(e.target.id==="c_sheet") closeSheet(); };
 
@@ -2414,7 +2435,8 @@ async function render(scroll){
   const mid=$e("div","mid");
   if(!isToday){ const tb=$e("button","todayb","חזרה להיום"); tb.type="button"; tb.onclick=()=>{ day=today(); render(true); }; mid.appendChild(tb); }
   const next=$e("button","navb","יום הבא ←"); next.type="button"; next.onclick=()=>{ day=addDays(day,1); render(true); window.scrollTo({top:0}); };
-  nav.appendChild(prev); nav.appendChild(mid); nav.appendChild(next); app.appendChild(nav);
+  nav.appendChild(prev); nav.appendChild(mid); nav.appendChild(next);
+  const top=$e("div","rbtop"); top.appendChild(nav); app.appendChild(top);
   const od=firstOpenDay();
   if(od && ymd(od)!==ymd(day)){ const a=$e("div","rbalert"); a.appendChild($e("span",null,`נשאר להשלים: ${fmtDay(od).g}`)); const b=$e("button","todayb","לעבור"); b.type="button"; b.onclick=()=>{ day=od; render(true); window.scrollTo({top:0}); }; a.appendChild(b); app.appendChild(a); }
   let target=null, foundNext=false;
@@ -2423,7 +2445,7 @@ async function render(scroll){
   // sticky progress bar: which chapter of today's three, which halacha of how many
   const sb=$e("div","rbsticky"); const l1=$e("div","l1"); const sA=$e("span"), sB=$e("span"); l1.appendChild(sA); l1.appendChild(sB); sb.appendChild(l1);
   const segs=$e("div","segs"); const segFill=us.map(u=>{ const i=$e("i"), b=$e("b"); const n=u.to-u.from, d=Math.max(0,Math.min(doneTo(u)+1,u.to)-u.from); b.style.width=(n?Math.round(d/n*100):0)+"%"; i.appendChild(b); segs.appendChild(i); return b; }); sb.appendChild(segs);
-  if(us.length) app.appendChild(sb);
+  if(us.length) top.appendChild(sb);
   const cards=[];
   us.forEach((u,ui)=>{
     const file=F[u.n];
@@ -2449,7 +2471,7 @@ async function render(scroll){
   // keep the sticky line in sync with what is on screen
   const left=st.t-st.d;
   function upd(){
-    let c=cards.find(x=>x.getBoundingClientRect().bottom>150)||cards[cards.length-1];
+    let c=cards.find(x=>x.getBoundingClientRect().bottom>200)||cards[cards.length-1];
     if(!c){ sA.textContent=""; sB.textContent=""; return; }
     const ui=+c.dataset.ui;
     sA.textContent=`${us.length>1?`פרק ${ui+1} מתוך ${us.length}`:us[0].label} · ${W} ${c.dataset.k} מתוך ${c.dataset.n}`;
