@@ -160,6 +160,27 @@ details summary{cursor:pointer;font-weight:600;color:var(--sky)}
 #chs[hidden],#zm[hidden],#gm[hidden]{display:none}
 /* gemara */
 #gm{max-width:640px;margin:0 auto}
+#rmb{max-width:640px;margin:0 auto}
+.rbapp{display:flex;flex-direction:column;gap:12px}
+.rbnav{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center}
+.rbnav .navb{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 10px;font-size:.9rem;white-space:nowrap}
+.rbnav .mid{text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px}
+.rbnav .mid b{font-size:1rem}
+.rbunit{font-family:var(--display);font-size:1.3rem;margin:10px 0 0;color:var(--sky)}
+.rbunit small{font-size:.85rem;color:var(--muted);font-family:inherit;margin-inline-start:6px}
+.rbh{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 16px;display:flex;flex-direction:column;gap:8px;scroll-margin-top:72px}
+.rbh.done{opacity:.68}
+.rbh.next{border-color:var(--gold);box-shadow:inset -4px 0 0 var(--gold)}
+.rbtxt{font-family:var(--display);font-size:1.14rem;line-height:1.9}
+.rbtxt .num{font-weight:700;color:var(--gold);margin-inline-end:6px}
+.rbtxt small{color:var(--muted);font-size:.8em}
+.rbrow{display:flex;justify-content:flex-end}
+.rbmark{border:0;background:var(--goldsoft,#f3e7cf);color:var(--ink);font-weight:700;border-radius:999px;padding:6px 14px;font-size:.88rem}
+.rbh.done .rbmark{background:none;border:1px solid var(--line);color:var(--muted)}
+.rbalert{background:var(--surface);border:1px dashed var(--gold);border-radius:14px;padding:10px 14px;display:flex;gap:10px;align-items:center;justify-content:space-between;font-size:.92rem}
+.rbdone{text-align:center;font-weight:700;color:var(--gold);padding:10px}
+.gmseg{scroll-margin-top:72px}
+
 .gmapp{display:flex;flex-direction:column;gap:12px}
 .gmhead{display:flex;flex-direction:column;gap:4px}
 .gmeyebrow{font-size:.8rem;letter-spacing:.04em;color:var(--gold);font-weight:700}
@@ -244,7 +265,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--sky)}
 #chs .sync{font-size:12px;color:var(--muted);margin-top:6px}
 </style>
 
-<nav class="apptabs" dir="rtl" role="tablist"><button type="button" role="tab" id="tabZm" aria-selected="true">זמנים ולוח</button><button type="button" role="tab" id="tabChs" aria-selected="false">לימוד חסידות</button><button type="button" role="tab" id="tabGm" aria-selected="false">גמרא</button></nav>
+<nav class="apptabs" dir="rtl" role="tablist"><button type="button" role="tab" id="tabZm" aria-selected="true">זמנים</button><button type="button" role="tab" id="tabChs" aria-selected="false">חסידות</button><button type="button" role="tab" id="tabGm" aria-selected="false">גמרא</button><button type="button" role="tab" id="tabRmb" aria-selected="false">רמב״ם</button></nav>
 <button type="button" class="copylink" id="copyLink" dir="rtl">🔗 העתקת קישור לפתיחה במחשב</button>
 <div class="wrap" dir="rtl" id="zm">
   <header>
@@ -2302,11 +2323,138 @@ window.gmOpen=function(){ if(!data){ load(); render(); } else { view=nextPoint()
 })();
 </script>
 
+<section id="rmb" dir="rtl" hidden>
+  <div id="rmbApp" class="rbapp"><p class="note">טוען את הרמב״ם…</p></div>
+</section>
 <script>
 (function(){
-  const P={zm:document.getElementById("zm"),chs:document.getElementById("chs"),gm:document.getElementById("gm")};
-  const T={zm:document.getElementById("tabZm"),chs:document.getElementById("tabChs"),gm:document.getElementById("tabGm")};
-  const TITLE={zm:"זמני היום",chs:"לימוד חסידות יומי",gm:"גמרא – זבחים"};
+"use strict";
+const IDX=[["Borrowing and Deposit",0,"הלכות שאלה ופיקדון",false,[10,11,4,9,7,5,12,6]],["Creditor and Debtor",1,"הלכות מלווה ולווה",false,[8,8,8,14,17,8,12,15,10,6,11,11,8,15,7,12,9,10,8,5,7,17,18,11,14,12,17]],["Plaintiff and Defendant",2,"הלכות טוען ונטען",false,[17,12,15,10,12,8,8,10,13,6,10,20,11,14,11,10]],["Inheritances",3,"הלכות נחלות",false,[13,17,9,8,9,13,10,2,15,8,12]],["The Sanhedrin and the Penalties within their Jurisdiction",4,"הלכות סנהדרין והעונשין המסורין להם",false,[10,14,10,15,18,9,10,3,3,9,11,5,8,14,13,12,9,6,4,12,11,10,10,10,11,7]],["Testimony",5,"הלכות עדות",false,[6,5,12,7,9,8,7,5,12,5,10,10,15,7,6,6,7,8,3,10,10,5]],["Rebels",6,"הלכות ממרים",false,[5,9,8,3,15,15,14]],["Mourning",7,"הלכות אבל",false,[11,15,14,9,20,13,8,10,15,10,8,12,12,26]],["Kings and Wars",8,"הלכות מלכים ומלחמות",false,[12,6,10,10,12,15,15,11,14,12,9,5]],["Transmission of the Oral Law",9,"מסירת תורה שבעל פה",true,[45]],["Positive Mitzvot",10,"מצוות עשה",true,[248]],["Negative Mitzvot",11,"מצוות לא תעשה",true,[370]],["Overview of Mishneh Torah Contents",12,"תוכן החיבור",false,[23,9,13,8,6,7,10,12,9,11,8,8,8,10]],["Foundations of the Torah",13,"הלכות יסודי התורה",false,[12,12,11,13,11,9,7,3,5,5]],["Human Dispositions",14,"הלכות דעות",false,[7,7,3,23,13,10,8]],["Torah Study",15,"הלכות תלמוד תורה",false,[13,7,13,9,13,14,13]],["Foreign Worship and Customs of the Nations",16,"הלכות עבודה זרה וחוקות הגויים",false,[3,10,11,16,11,10,19,12,18,6,16,16]],["Repentance",17,"הלכות תשובה",false,[4,11,14,6,5,5,8,8,2,6]],["Reading the Shema",18,"הלכות קריאת שמע",false,[13,17,19,8]],["Prayer and the Priestly Blessing",19,"הלכות תפילה וברכת כהנים",false,[10,19,11,19,15,10,18,12,14,16,21,24,25,14,12]],["Tefillin, Mezuzah and the Torah Scroll",20,"הלכות תפילין ומזוזה וספר תורה",false,[20,11,19,26,11,13,16,4,15,11]],["Fringes",21,"הלכות ציצית",false,[18,9,12]],["Blessings",22,"הלכות ברכות",false,[20,14,13,12,17,20,15,16,9,26,16]],["Circumcision",23,"הלכות מילה",false,[18,10,9]],["The Order of Prayer",24,"סדר התפילה",false,[10,37,10,4,7]],["Sabbath",25,"הלכות שבת",false,[19,25,22,6,21,25,9,16,20,25,17,19,22,24,22,24,36,28,26,14,36,33,28,13,26,23,17,19,29,15]],["Eruvin",26,"הלכות עירובין",false,[22,16,25,27,24,24,10,15]],["Rest on the Tenth of Tishrei",27,"הלכות שביתת עשור",false,[7,11,10]],["Rest on a Holiday",28,"הלכות שביתת יום טוב",false,[24,18,17,26,20,24,25,21]],["Leavened and Unleavened Bread",29,"הלכות חמץ ומצה",false,[10,19,11,12,26,12,13,14]],["Shofar, Sukkah and Lulav",30,"הלכות שופר וסוכה ולולב",false,[8,10,13,16,25,16,27,15]],["Sheqel Dues",31,"הלכות שקלים",false,[10,10,15,12]],["Sanctification of the New Month",32,"הלכות קידוש החודש",false,[8,10,19,17,13,15,8,10,8,7,17,2,11,6,9,19,24,16,16]],["Fasts",33,"הלכות תעניות",false,[17,18,11,19,19]],["Scroll of Esther and Hanukkah",34,"הלכות מגילה וחנוכה",false,[14,18,14,14]],["Marriage",35,"הלכות אישות",false,[8,27,24,22,29,18,23,6,31,19,17,24,20,24,20,31,19,28,22,14,18,35,18,25,13]],["Divorce",36,"הלכות גירושין",false,[28,20,19,25,18,30,24,24,41,23,28,24,29]],["Levirate Marriage and Release",37,"הלכות יבום וחליצה",false,[23,21,19,35,30,31,22,13]],["Virgin Maiden",38,"הלכות נערה בתולה",false,[15,17,12]],["Woman Suspected of Infidelity",39,"הלכות סוטה",false,[20,16,24,19]],["Forbidden Intercourse",40,"הלכות איסורי ביאה",false,[23,14,17,22,25,23,24,22,39,21,19,25,18,19,33,13,21,30,23,20,32,21]],["Forbidden Foods",41,"הלכות מאכלות אסורות",false,[24,24,24,22,15,21,21,18,28,24,26,29,28,19,34,35,32]],["Ritual Slaughter",42,"הלכות שחיטה",false,[29,22,25,18,12,21,21,26,21,14,15,17,21,16]],["Oaths",43,"הלכות שבועות",false,[13,19,11,22,22,18,16,14,19,19,20,12]],["Vows",44,"הלכות נדרים",false,[30,19,12,16,16,18,17,14,23,13,26,21,25]],["Nazariteship",45,"הלכות נזירות",false,[17,22,19,17,21,20,15,20,19,14]],["Appraisals and Devoted Property",46,"הלכות ערכים וחרמין",false,[23,13,20,28,19,34,20,13]],["Diverse Species",47,"הלכות כלאים",false,[9,17,18,16,24,16,25,14,11,32]],["Gifts to the Poor",48,"הלכות מתנות עניים",false,[15,20,23,27,27,17,15,18,19,19]],["Heave Offerings",49,"הלכות תרומות",false,[26,17,24,21,26,19,23,16,10,26,28,22,16,21,22]],["Tithes",50,"הלכות מעשרות",false,[16,8,25,18,23,22,13,9,13,13,15,18,21,10]],["Second Tithes and Fourth Year's Fruit",51,"הלכות מעשר שני ונטע רבעי",false,[14,16,25,22,15,16,20,15,13,21,17]],["First Fruits and other Gifts to Priests Outside the Sanctuary",52,"הלכות ביכורים ושאר מתנות כהונה שבגבולין",false,[16,21,14,17,15,20,13,15,22,17,30,24]],["Sabbatical Year and the Jubilee",53,"הלכות שמיטה ויובל",false,[22,14,11,30,23,15,22,20,30,16,21,16,13]],["The Chosen Temple",54,"הלכות בית הבחירה",false,[20,18,18,13,17,16,23,12]],["Vessels of the Sanctuary and Those who Serve Therein",55,"הלכות כלי המקדש והעובדין בו",false,[19,13,11,22,17,11,20,19,11,13]],["Admission into the Sanctuary",56,"הלכות ביאת מקדש",false,[17,12,24,18,19,12,13,17,15]],["Things Forbidden on the Altar",57,"הלכות איסורי המזבח",false,[12,16,15,18,13,15,11]],["Sacrificial Procedure",58,"הלכות מעשה הקרבנות",false,[19,15,15,11,21,23,12,21,25,23,9,23,14,17,8,17,15,18,16]],["Daily Offerings and Additional Offerings",59,"הלכות תמידים ומוספין",false,[12,15,22,14,16,11,25,20,13,20]],["Sacrifices Rendered Unfit",60,"הלכות פסולי המוקדשין",false,[37,26,25,27,13,24,12,11,7,5,31,18,9,10,20,11,20,24,15]],["Service on the Day of Atonement",61,"הלכות עבודת יום הכפורים",false,[8,7,11,2,28]],["Trespass",62,"הלכות מעילה",false,[13,16,13,11,16,13,11,8]],["Paschal Offering",63,"הלכות קרבן פסח",false,[20,15,9,11,9,13,9,15,9,15]],["Festival Offering",64,"הלכות חגיגה",false,[11,14,7]],["Firstlings",65,"הלכות בכורות",false,[19,19,13,21,11,16,9,15]],["Offerings for Unintentional Transgressions",66,"הלכות שגגות",false,[5,16,12,5,7,12,12,10,13,13,9,2,6,5,10]],["Offerings for Those with Incomplete Atonement",67,"הלכות מחוסרי כפרה",false,[13,14,7,3,11]],["Substitution",68,"הלכות תמורה",false,[21,4,7,13]],["Defilement by a Corpse",69,"הלכות טומאת מת",false,[15,16,15,14,14,9,7,11,12,12,12,8,8,7,5,7,6,8,6,8,11,11,4,8,12]],["Red Heifer",70,"הלכות פרה אדומה",false,[15,8,4,18,7,16,11,8,18,10,7,12,12,10,10]],["Defilement by Leprosy",71,"הלכות טומאת צרעת",false,[11,9,9,11,11,7,7,14,12,12,10,13,15,15,8,10]],["Those Who Defile Bed or Seat",72,"הלכות מטמאי משכב ומושב",false,[16,10,9,15,9,6,8,11,5,11,12,23,8]],["Other Sources of Defilement",73,"הלכות שאר אבות הטומאות",false,[17,12,16,14,19,16,6,13,11,10,16,16,13,12,11,10,9,16,4,13]],["Defilement of Foods",74,"הלכות טומאת אוכלים",false,[25,28,10,16,22,19,9,19,11,17,17,12,17,17,8,12]],["Vessels",75,"הלכות כלים",false,[13,8,8,10,12,15,15,15,16,17,24,18,14,14,19,14,7,16,16,17,12,27,11,11,20,15,18,7]],["Immersion Pools",76,"הלכות מקואות",false,[12,23,26,10,9,14,12,13,18,8,12]],["Damages to Property",77,"הלכות נזקי ממון",false,[11,20,15,14,10,13,13,14,14,14,13,22,27,16]],["Theft",78,"הלכות גניבה",false,[18,18,17,12,12,9,12,20,13]],["Robbery and Lost Property",79,"הלכות גזילה ואבידה",false,[13,16,16,17,18,16,13,14,16,12,20,15,20,13,18,11,13,14]],["One Who Injures a Person or Property",80,"הלכות חובל ומזיק",false,[19,20,11,22,13,16,19,15]],["Murderer and the Preservation of Life",81,"הלכות רוצח ושמירת נפש",false,[16,16,13,12,14,15,15,11,17,10,16,15,14]],["Sales",82,"הלכות מכירה",false,[20,10,18,15,14,16,14,8,7,8,18,15,18,18,13,14,9,14,10,15,23,17,15,17,9,8,11,15,18,7]],["Ownerless Property and Gifts",83,"הלכות זכייה ומתנה",false,[15,18,15,14,9,24,15,27,26,15,24,17]],["Neighbors",84,"הלכות שכנים",false,[5,18,10,11,16,14,10,9,13,8,7,17,14,5]],["Agents and Partners",85,"הלכות שלוחין ושותפין",false,[9,9,11,5,11,5,7,7,9,6]],["Slaves",86,"הלכות עבדים",false,[10,12,15,16,17,8,9,21,8]],["Hiring",87,"הלכות שכירות",false,[6,12,10,8,8,11,8,14,11,7,9,14,7]]];
+const BY={}; IDX.forEach(x=>BY[x[0]]=x);
+const LS="rambam.prog";
+const app=document.getElementById("rmbApp");
+let prog={d:{},start:"",updated:""};
+try{ const p=JSON.parse(localStorage.getItem(LS)); if(p&&p.d) prog={d:p.d,start:p.start||"",updated:p.updated||""}; }catch(e){}
+const $e=(t,c,x)=>{const e=document.createElement(t); if(c) e.className=c; if(x!=null) e.textContent=x; return e;};
+function heb(n){ const o=["","א","ב","ג","ד","ה","ו","ז","ח","ט"],t=["","י","כ","ל","מ","נ","ס","ע","פ","צ"],h=["","ק","ר","ש","ת","תק","תר","תש","תת","תתק"];
+  let r=h[Math.floor(n/100)]; const m=n%100; r+= m===15?"טו": m===16?"טז": t[Math.floor(m/10)]+o[m%10];
+  return r.length===1? r+"׳" : r.slice(0,-1)+"״"+r.slice(-1); }
+function ymd(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function addDays(d,n){ const x=new Date(d.getFullYear(),d.getMonth(),d.getDate()+n); return x; }
+function today(){ const n=new Date(); return new Date(n.getFullYear(),n.getMonth(),n.getDate()); }
+let day=today();
+const files={};
+function getFile(n){ if(!files[n]) files[n]=fetch("rmb-"+n+".json").then(r=>r.ok?r.json():null).catch(()=>null).then(x=>{ if(!x) delete files[n]; return x; }); return files[n]; }
+function units(date){
+  const H=window.Hebcal; if(!H) return null; let rd=[];
+  try{ rd=H.dailyRambam3(new H.HDate(date)); }catch(e){ return []; }
+  const out=[];
+  rd.forEach(x=>{ const e=BY[x.name]; if(!e) return; const [name,n,he,flat,lens]=e; const p=x.perek;
+    if(typeof p==="number"){ if(p-1<lens.length) out.push({n,c:p-1,from:0,to:lens[p-1],label:`${he} פרק ${heb(p)}`}); return; }
+    let m=String(p).match(/^(\d+)-(\d+)$/);
+    if(m){ const a=+m[1], b=+m[2];
+      if(flat){ out.push({n,c:0,from:a-1,to:Math.min(b,lens[0]),label:`${he} ${heb(a)}–${heb(b)}`}); }
+      else for(let c=a;c<=b;c++){ if(c-1<lens.length) out.push({n,c:c-1,from:0,to:lens[c-1],label:`${he} פרק ${heb(c)}`}); }
+      return; }
+    m=String(p).match(/^(\d+):\d+-(\d+):\d+$/);
+    if(m){ for(let c=+m[1];c<=+m[2];c++){ if(c-1<lens.length) out.push({n,c:c-1,from:0,to:lens[c-1],label:`${he} פרק ${heb(c)}`}); } }
+  });
+  return out;
+}
+const key=u=>u.n+"."+u.c;
+const doneTo=u=> (typeof prog.d[key(u)]==="number"? prog.d[key(u)] : -1);
+function dayStats(us){ let t=0,d=0; us.forEach(u=>{ t+=u.to-u.from; d+=Math.max(0,Math.min(doneTo(u)+1,u.to)-u.from); }); return {t,d}; }
+function saveProg(){ prog.updated=new Date().toISOString(); try{ localStorage.setItem(LS,JSON.stringify(prog)); }catch(e){} if(window.ZS&&ZS.on) ZS.put("rmb",prog); }
+function mark(u,j){
+  const cur=doneTo(u);
+  if(j<=cur) prog.d[key(u)]=j-1; else prog.d[key(u)]=j;   // tap a finished one again = undo from there
+  if(!prog.start||ymd(day)<prog.start) prog.start=ymd(day);
+  saveProg();
+}
+function firstOpenDay(){ // earliest unfinished day between start and yesterday (max 60 days back)
+  if(!prog.start) return null; const t=today();
+  for(let i=60;i>=1;i--){ const d=addDays(t,-i); if(ymd(d)<prog.start) continue; const us=units(d); if(!us||!us.length) continue; const st=dayStats(us); if(st.d<st.t) return d; }
+  return null;
+}
+function fmtDay(d){
+  let he=""; try{ he=new window.Hebcal.HDate(d).renderGematriya(true); }catch(e){}
+  const g=d.toLocaleDateString("he-IL",{weekday:"long",day:"numeric",month:"long"});
+  return {he,g};
+}
+let renderToken=0, wantScroll=false;
+async function render(scroll){
+  if(scroll) wantScroll=true;
+  const tok=++renderToken;
+  if(!window.Hebcal){ app.innerHTML=""; app.appendChild($e("p","note","טוען את לוח הרמב״ם…")); return; }
+  const us=units(day);
+  const loaded=await Promise.all([...new Set(us.map(u=>u.n))].map(n=>getFile(n).then(f=>[n,f])));
+  if(tok!==renderToken) return;
+  const F={}; loaded.forEach(([n,f])=>F[n]=f);
+  app.innerHTML="";
+  const isToday=ymd(day)===ymd(today());
+  const hd=$e("header","gmhead");
+  hd.appendChild($e("div","gmeyebrow","רמב״ם יומי · שלושה פרקים ליום"));
+  const f=fmtDay(day);
+  hd.appendChild($e("h1","gmtitle",f.he||f.g));
+  hd.appendChild($e("div","gmcount",f.g+(isToday?" · היום":"")));
+  const st=dayStats(us);
+  const bar=$e("div","gmbar"), fill=$e("i"); fill.style.width=(st.t?Math.round(st.d/st.t*100):0)+"%"; bar.appendChild(fill); hd.appendChild(bar);
+  hd.appendChild($e("div","gmcount",`סיימת ${st.d} מתוך ${st.t} ${us.some(u=>BY[IDX[u.n][0]][3])?"פריטים":"הלכות"}`));
+  app.appendChild(hd);
+  const nav=$e("div","rbnav");
+  const prev=$e("button","navb","→ יום קודם"); prev.type="button"; prev.onclick=()=>{ day=addDays(day,-1); render(true); window.scrollTo({top:0}); };
+  const mid=$e("div","mid");
+  if(!isToday){ const tb=$e("button","todayb","חזרה להיום"); tb.type="button"; tb.onclick=()=>{ day=today(); render(true); }; mid.appendChild(tb); }
+  const next=$e("button","navb","יום הבא ←"); next.type="button"; next.onclick=()=>{ day=addDays(day,1); render(true); window.scrollTo({top:0}); };
+  nav.appendChild(prev); nav.appendChild(mid); nav.appendChild(next); app.appendChild(nav);
+  const od=firstOpenDay();
+  if(od && ymd(od)!==ymd(day)){ const a=$e("div","rbalert"); a.appendChild($e("span",null,`נשאר להשלים: ${fmtDay(od).g}`)); const b=$e("button","todayb","לעבור"); b.type="button"; b.onclick=()=>{ day=od; render(true); window.scrollTo({top:0}); }; a.appendChild(b); app.appendChild(a); }
+  let target=null, foundNext=false;
+  us.forEach(u=>{
+    const file=F[u.n];
+    app.appendChild((()=>{ const h=$e("h2","rbunit",u.label); return h; })());
+    if(!file){ app.appendChild($e("p","note","לא הצלחתי לטעון את הטקסט. רעננו את הדף.")); return; }
+    const chap=file.ch[u.c]||[]; const dt=doneTo(u);
+    for(let j=u.from;j<u.to&&j<chap.length;j++){
+      const done=j<=dt, isNext=!done&&!foundNext;
+      const card=$e("article","rbh"+(done?" done":"")+(isNext?" next":""));
+      if(isNext){ foundNext=true; card.appendChild($e("div","gmhere","כאן ממשיכים")); target=card; }
+      const tx=$e("div","rbtxt"); tx.innerHTML=`<span class="num">${heb(j+1)}</span>`+chap[j]; card.appendChild(tx);
+      const row=$e("div","rbrow"); const mb=$e("button","rbmark",done?"✓ נלמד":"סיימתי"); mb.type="button";
+      mb.onclick=()=>{ mark(u,j); render(!done); };
+      row.appendChild(mb); card.appendChild(row); app.appendChild(card);
+    }
+  });
+  if(us.length && st.d>=st.t){ app.appendChild($e("div","rbdone","✓ סיימת את הרמב״ם של יום זה")); if(isToday){ const nb=$e("button","gmbtn","להמשיך ליום הבא ←"); nb.type="button"; nb.onclick=()=>{ day=addDays(day,1); render(true); window.scrollTo({top:0}); }; const w=$e("div","gmend"); w.appendChild(nb); app.appendChild(w);} }
+  app.appendChild($e("p","note gmcredit","נוסח משנה תורה: תורת אמת (נחלת הכלל), באדיבות ספריא. הקדמה ומניין המצוות: ויקיטקסט (CC BY-SA). חלוקת הלימוד לפי לוח הרמב״ם היומי."));
+  if(wantScroll && target && !document.getElementById("rmb").hidden){ wantScroll=false; setTimeout(()=>target.scrollIntoView({behavior:"smooth",block:"start"}),60); }
+}
+window.rmbOpen=function(){ if(ymd(day)!==ymd(today())) day=today(); render(true); };
+// wait for the calendar library
+(function waitLib(i){ if(window.Hebcal){ if(!document.getElementById("rmb").hidden) render(true); return; }
+  if(i===30 && !document.querySelector('script[src="luach-lib.js"]')){ const sc=document.createElement("script"); sc.src="luach-lib.js"; document.head.appendChild(sc); }
+  if(i<300) setTimeout(()=>waitLib(i+1),100); })(0);
+// sync between devices (standalone site)
+if(window.ZS&&ZS.on) ZS.puller("rmb",
+  ()=> prog.updated? prog : null,
+  d=>{ prog={d:d.d||{},start:d.start||"",updated:d.updated}; try{ localStorage.setItem(LS,JSON.stringify(prog)); }catch(e){} if(!document.getElementById("rmb").hidden) render(); },
+  d=> d && typeof d.d==="object");
+// Claude version: sync through the artifact's own storage
+(async()=>{ try{
+  if(!window.claude||typeof window.claude.use!=="function") return;
+  const [db,user]=await Promise.all([window.claude.use("db"),window.claude.use("user")]); if(!db||!user) return;
+  const id=await user.id(); if(!id) return; const ref=db.collection("data/users/"+id).doc("rambam");
+  const snap=await ref.get(); let d=null; if(snap){ d=(typeof snap.data==="function")?snap.data():(snap.data&&typeof snap.data==="object"?snap.data:snap); }
+  if(d&&d.d&&(d.updated||"")>(prog.updated||"")){ prog={d:d.d,start:d.start||"",updated:d.updated}; try{ localStorage.setItem(LS,JSON.stringify(prog)); }catch(e){} render(); }
+  const orig=saveProg; saveProg=function(){ orig(); try{ ref.set({d:prog.d,start:prog.start,updated:prog.updated}); }catch(e){} };
+}catch(e){} })();
+})();
+</script>
+<script>
+(function(){
+  const P={zm:document.getElementById("zm"),chs:document.getElementById("chs"),gm:document.getElementById("gm"),rmb:document.getElementById("rmb")};
+  const T={zm:document.getElementById("tabZm"),chs:document.getElementById("tabChs"),gm:document.getElementById("tabGm"),rmb:document.getElementById("tabRmb")};
+  const TITLE={zm:"זמני היום",chs:"לימוד חסידות יומי",gm:"גמרא – זבחים",rmb:"רמב״ם יומי"};
   function show(which,save){
     if(!P[which]) which="zm";
     Object.keys(P).forEach(k=>{ P[k].hidden=(k!==which); T[k].setAttribute("aria-selected",String(k===which)); });
@@ -2315,8 +2463,9 @@ window.gmOpen=function(){ if(!data){ load(); render(); } else { view=nextPoint()
     if(save){ try{localStorage.setItem("app.tab",which);}catch(e){} }
     window.scrollTo({top:0});
     if(which==="gm"&&window.gmOpen) window.gmOpen();
+    if(which==="rmb"&&window.rmbOpen) window.rmbOpen();
   }
-  let cur="zm"; const HASH={zm:"#zmanim",chs:"#limud",gm:"#gemara"};
+  let cur="zm"; const HASH={zm:"#zmanim",chs:"#limud",gm:"#gemara",rmb:"#rambam"};
   const SITE="https://bekermanavraham-lab.github.io/zmanim/";
   const cb=document.getElementById("copyLink");
   function copied(url){ cb.classList.add("ok"); cb.textContent="✓ הועתק: "+url; setTimeout(()=>{ cb.classList.remove("ok"); cb.textContent="🔗 העתקת קישור לפתיחה במחשב"; },4000); }
@@ -2324,7 +2473,7 @@ window.gmOpen=function(){ if(!data){ load(); render(); } else { view=nextPoint()
   if(cb) cb.onclick=()=>{ const url=SITE+(HASH[cur]||"#zmanim")+(window.zmSyncKey?"&k="+window.zmSyncKey:""); if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(url).then(()=>copied(url),()=>fallback(url)); } else fallback(url); };
   Object.keys(T).forEach(k=>{ T[k].onclick=()=>show(k,true); });
   let start="zm"; try{ start=localStorage.getItem("app.tab")||"zm"; }catch(e){}
-  if(location.hash==="#limud") start="chs"; if(location.hash==="#zmanim") start="zm"; if(location.hash==="#gemara") start="gm";
+  if(location.hash==="#limud") start="chs"; if(location.hash==="#zmanim") start="zm"; if(location.hash==="#gemara") start="gm"; if(location.hash==="#rambam") start="rmb";
   show(start,false);
 })();
 </script>
