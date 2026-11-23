@@ -166,6 +166,11 @@ details summary{cursor:pointer;font-weight:600;color:var(--sky)}
 .rbnav .navb{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 10px;font-size:.9rem;white-space:nowrap}
 .rbnav .mid{text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px}
 .rbnav .mid b{font-size:1rem}
+.rbnav .mid{gap:2px;min-width:0}
+.rbday{font-family:var(--display);font-size:1rem;color:var(--ink);white-space:nowrap}
+.rbrel{font-size:.78rem;font-weight:700;border:0;background:none;padding:0;color:var(--gold);white-space:nowrap}
+.rbrel.today{color:var(--ok,#2e7d32)}
+button.rbrel{text-decoration:underline;text-underline-offset:2px;cursor:pointer}
 .rbunit{font-family:var(--display);font-size:1.3rem;margin:10px 0 0;color:var(--sky)}
 .rbunit small{font-size:.85rem;color:var(--muted);font-family:inherit;margin-inline-start:6px}
 .rbh{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 16px;display:flex;flex-direction:column;gap:8px;scroll-margin-top:130px}
@@ -181,7 +186,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--sky)}
 .rbdone{text-align:center;font-weight:700;color:var(--gold);padding:10px}
 .rbsticky{position:sticky;top:64px;z-index:50;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:7px 12px;box-shadow:0 4px 12px rgba(0,0,0,.07);display:flex;flex-direction:column;gap:5px;font-size:.86rem}
 .rbsticky .l1{display:flex;justify-content:space-between;gap:8px;font-weight:700}
-.rbsticky .l1 span:last-child{color:var(--muted);font-weight:600}
+.rbsticky .l1 span:last-child{color:var(--muted);font-weight:600;white-space:nowrap}
 .rbsticky .segs{display:flex;gap:4px}
 .rbsticky .segs i{flex:1;height:5px;border-radius:4px;background:var(--line);overflow:hidden;display:block}
 .rbsticky .segs i b{display:block;height:100%;background:var(--gold)}
@@ -2454,7 +2459,13 @@ async function render(scroll){
   const nav=$e("div","rbnav");
   const prev=$e("button","navb","→ יום קודם"); prev.type="button"; prev.onclick=()=>{ day=addDays(day,-1); render(true); window.scrollTo({top:0}); };
   const mid=$e("div","mid");
-  if(!isToday){ const tb=$e("button","todayb","חזרה להיום"); tb.type="button"; tb.onclick=()=>{ day=today(); render(true); }; mid.appendChild(tb); }
+  { const WD=["א׳","ב׳","ג׳","ד׳","ה׳","ו׳","שבת"]; let hd2=""; try{ hd2=new window.Hebcal.HDate(day).renderGematriya(true).split(" ").slice(0,-1).join(" "); }catch(e){}
+    const wd= day.getDay()===6? "שבת" : "יום "+WD[day.getDay()];
+    mid.appendChild($e("b","rbday",`${wd} · ${hd2}`));
+    const diff=Math.round((day-today())/864e5);
+    const rel= diff===0?"היום": diff===-1?"אתמול": diff===1?"מחר": diff<0?`לפני ${-diff} ימים`:`עוד ${diff} ימים`;
+    if(isToday) mid.appendChild($e("span","rbrel today",rel));
+    else { const tb=$e("button","rbrel",`${rel} · חזרה להיום ↺`); tb.type="button"; tb.onclick=()=>{ day=today(); render(true); }; mid.appendChild(tb); } }
   const next=$e("button","navb","יום הבא ←"); next.type="button"; next.onclick=()=>{ day=addDays(day,1); render(true); window.scrollTo({top:0}); };
   nav.appendChild(prev); nav.appendChild(mid); nav.appendChild(next);
   const top=$e("div","rbtop"); top.appendChild(nav); app.appendChild(top);
@@ -2497,7 +2508,7 @@ async function render(scroll){
     const ui=+c.dataset.ui;
     const u=us[ui], e=IDX[u.n];
     sT.textContent=`${e[5]} · ${u.label}`;
-    sA.textContent=`${W} ${c.dataset.k} מתוך ${c.dataset.n}${us.length>1?` · פרק ${ui+1} מתוך ${us.length} של היום`:""}`;
+    sA.textContent=`${W} ${c.dataset.k} מתוך ${c.dataset.n}${us.length>1?` · פרק ${ui+1}/${us.length} של היום`:""}`;
     sB.textContent= left? `נשארו ${left}` : "✓ סיימת להיום";
   }
   upd();
